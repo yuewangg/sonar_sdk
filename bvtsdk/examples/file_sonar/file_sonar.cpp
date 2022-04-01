@@ -42,7 +42,7 @@ int main( int argc, char *argv[] )
 
 	// Get the first head
 	BVTHead head = NULL;
-	ret = BVTSonar_GetHead(son, 0, &head);  //Retrieve a Head object from the sonar
+	ret = BVTSonar_GetHead(son, 0, &head);
 	if( ret != 0 )
 	{
 		printf("BVTSonar_GetHead: ret=%d\n", ret);
@@ -51,7 +51,7 @@ int main( int argc, char *argv[] )
 	
 	// Check the ping count
 	int pings = -1;
-	BVTHead_GetPingCount(head, &pings); //Return the number of pings 'in' this head A head attached to a file might have more than one ping recorded. However, a networked sonar will only have a single ping.
+	BVTHead_GetPingCount(head, &pings);
 	printf("BVTHead_GetPingCount: %d\n", pings);
 
     // Check the min and max range in this file
@@ -75,7 +75,7 @@ int main( int argc, char *argv[] )
 	
 	// Generate an image from the ping
 	BVTMagImage img;
-	ret = BVTImageGenerator_GetImageXY(ig, ping, &img);  //set the size for this image.
+	ret = BVTImageGenerator_GetImageXY(ig, ping, &img);
 	if( ret != 0 )
 	{
 		printf("BVTImageGenerator_GetImageXY: ret=%d\n", ret);
@@ -105,8 +105,8 @@ int main( int argc, char *argv[] )
 	/////////////////////////////////////////////////////////
 	
 	// Build a color mapper
-	BVTColorMapper mapper;  //generating a ColorImage.
-	mapper = BVTColorMapper_Create();  //Create a BVTColorMapper object
+	BVTColorMapper mapper;
+	mapper = BVTColorMapper_Create();
 	if( mapper == NULL )
 	{
 		printf("BVTColorMapper_Create: failed\n");
@@ -124,7 +124,7 @@ int main( int argc, char *argv[] )
 	
 	// Perform the colormapping
 	BVTColorImage cimg;
-	ret = BVTColorMapper_MapImage(mapper, img, &cimg);  //Apply a colormap to an intensity image to produce a ColorImage.
+	ret = BVTColorMapper_MapImage(mapper, img, &cimg);
 	if( ret != 0 )
 	{
 		printf("BVTColorMapper_MapImage: ret=%d\n", ret);

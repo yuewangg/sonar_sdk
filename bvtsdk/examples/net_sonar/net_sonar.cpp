@@ -30,7 +30,7 @@ int main( void )
 
 	// Make sure we have the right number of heads
 	int heads;
-	BVTSonar_GetHeadCount(son, &heads); //Return the number of heads on this sonar
+	BVTSonar_GetHeadCount(son, &heads);
 	printf("BVTSonar_GetHeadCount: %d\n", heads);
 
 	// Get the first head
@@ -39,7 +39,7 @@ int main( void )
 	if( ret != 0 )
 	{
         // some sonars start at head 1 instead of zero...
-        ret = BVTSonar_GetHead(son, 1, &head);  //Retrieve a Head object from the sonar
+        ret = BVTSonar_GetHead(son, 1, &head);
         if( ret != 0 )
         {
             printf("BVTSonar_GetHead: ret=%d\n", ret);
@@ -49,7 +49,7 @@ int main( void )
 	}
 	
 	// Set the range window to be 1m to 40m
-	BVTHead_SetRange(head, 1, 40);  //Set the range to be acquired.
+	BVTHead_SetRange(head, 1, 40);
 	
 	////////////////////////////////////////////////
 	// Now, Create a file to save some pings to
@@ -60,7 +60,7 @@ int main( void )
 		return 1;
 	}
 	
-	ret = BVTSonar_CreateFile(file, "out.son", son, "");  //Create a new data file. 
+	ret = BVTSonar_CreateFile(file, "out.son", son, "");
 	if( ret != 0 )
 	{
 		printf("BVTSonar_CreateFile: ret=%d\n", ret);
@@ -90,18 +90,18 @@ int main( void )
 			return 1;
 		}
 
-		ret = BVTHead_PutPing(out_head, ping);  //Write a ping to a file.
+		ret = BVTHead_PutPing(out_head, ping);
 		if( ret != 0 )
 		{
 			printf("BVTHead_PutPing: ret=%d\n", ret);
 			return 1;
 		}
-		BVTPing_Destroy(ping);  //Destroy a BVTPing object
+		BVTPing_Destroy(ping);
 	}
 
     printf("Saved %d pings to out.son file\n", num_pings);
 
-	BVTSonar_Destroy(file);  //Destroy a BVTSonar object
-	BVTSonar_Destroy(son);  //Destroy a BVTSonar object
+	BVTSonar_Destroy(file);
+	BVTSonar_Destroy(son);
 	return 0;
 }

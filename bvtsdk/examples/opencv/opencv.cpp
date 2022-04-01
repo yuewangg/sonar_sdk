@@ -86,14 +86,14 @@ int main( void )
 	BVTMagImage_GetWidth(img, &width);
 
 	// Create a IplImage header
-	IplImage* gray_img = cvCreateImageHeader(cvSize(width,height), IPL_DEPTH_16U, 1);//创建图像首地址
+	IplImage* gray_img = cvCreateImageHeader(cvSize(width,height), IPL_DEPTH_16U, 1);
 	
 	// And then set it's data
 	// Note: This means that the IplImage points to memory 'owned'
 	// by the SDK.  Make sure that you don't use gray_img after you've
 	// destroyed the img.
 	unsigned short* bitBuffer;
-	BVTMagImage_GetBits(img, &bitBuffer);//Return a pointer to the entire image. The image or organized in Row-Major order (just like C/C++). 
+	BVTMagImage_GetBits(img, &bitBuffer);
 	cvSetImageData(gray_img,  bitBuffer, width*2);
 	
 	// Make a new window and show the image
