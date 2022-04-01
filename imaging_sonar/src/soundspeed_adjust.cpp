@@ -52,10 +52,10 @@ void ThresholdChange( int, void* ){
 int main(int argc, char** argv){
 
     // * Setup path * //
-    std::string rootPath = "/home/paicaloid/bvtsdk/";
+    std::string rootPath = "/home/yue/URPC2022/sonar_sdk/bvtsdk/";
 	std::string dataPath = rootPath + "data/";
 	std::string mapperPath = rootPath + "colormaps/bone.cmap";
-	std::string fileName = "Apr_27_2017_12842_6.son";
+	std::string fileName = "20m.son";
 	std::string fullPath = dataPath + fileName;
 
     // * Create Windowname * //

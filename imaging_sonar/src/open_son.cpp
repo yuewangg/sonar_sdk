@@ -91,10 +91,10 @@ void Sonar_status(){
 int main(int argc, char** argv){
 
 	/// Setup Path ///
-	std::string rootPath = "/home/paicaloid/bvtsdk/";			// SDK path
+	std::string rootPath = "/home/yue/URPC2022/sonar_sdk/bvtsdk/";			// SDK path
 	std::string dataPath = rootPath + "data/";					// .son path
 	std::string mapperPath = rootPath + "colormaps/bone.cmap";	// Colormapper path
-	std::string fileName = "Apr_27_2017_12842_6.son";			// filename of .son
+	std::string fileName = "20m.son";			// filename of .son
 	std::string fullPath = dataPath + fileName;
 
 	/// Create Windowname ///
