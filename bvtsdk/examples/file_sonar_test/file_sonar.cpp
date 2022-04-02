@@ -7,10 +7,20 @@
  */
 #include <stdio.h>
 #include <string.h>
-
+#include <stdlib.h>
 #include <bvt_sdk.h>
+#include <iostream>
+#include <sstream>
+using namespace std;
 
-char DataFile[] = "../../data/swimmer.son";
+std::string num2str(int i)
+{
+    std::stringstream ss;
+    ss<<i;
+    return ss.str();
+}
+
+char DataFile[] = "../../data/0330Data.son";
 
 int main( int argc, char *argv[] )
 {
@@ -66,42 +76,38 @@ int main( int argc, char *argv[] )
 
     // Now, get a ping!
 	BVTPing ping = NULL;
-	ret = BVTHead_GetPing(head, 0, &ping);
-	if( ret != 0 )
-	{
-		printf("BVTHead_GetPing: ret=%d\n", ret);
-		return 1;
-	}
-	
-	// Generate an image from the ping
-	BVTMagImage img;
-	ret = BVTImageGenerator_GetImageXY(ig, ping, &img);
-	if( ret != 0 )
-	{
-		printf("BVTImageGenerator_GetImageXY: ret=%d\n", ret);
-		return 1;
-	}
 
-	printf("\n");
-
-	/////////////////////////////////////////////////////////
-	
-	// Check the image height and width out
-	int height;
-	BVTMagImage_GetHeight(img, &height);
-	printf("BVTMagImage_GetHeight: %d\n", height);
-	int width;
-	BVTMagImage_GetWidth(img, &width);
-	printf("BVTMagImage_GetWidth: %d\n", width);
-	
-	// Save it to a PGM (PortableGreyMap)
-	ret = BVTMagImage_SavePGM(img, "img.pgm");
-	if( ret != 0 )
+	const char* img_filename=NULL;
+	for(int a = 0; a < pings; a = a + 1)
 	{
-		printf("BVTMagImage_SavePGM: ret=%d\n", ret);
-		return 1;
-	}
 
+		ret = BVTHead_GetPing(head, a, &ping);
+		if( ret != 0 )
+		{
+			printf("BVTHead_GetPing: ret=%d\n", ret);
+			return 1;
+		}
+		
+		// Generate an image from the ping
+		BVTMagImage img;
+		ret = BVTImageGenerator_GetImageXY(ig, ping, &img);
+		if( ret != 0 )
+		{
+			printf("BVTImageGenerator_GetImageXY: ret=%d\n", ret);
+			return 1;
+		}
+		std::string num;
+		num=num2str(a);
+		std::string img_name = "img/img" + num + ".pgm";
+		img_filename = img_name.c_str();
+		// Save it to a PGM (PortableGreyMap)
+		ret = BVTMagImage_SavePGM(img, img_filename);
+		if( ret != 0 )
+		{
+			printf("BVTMagImage_SavePGM: ret=%d\n", ret);
+			return 1;
+		}
+	}
 	/////////////////////////////////////////////////////////
 	
 	// Build a color mapper
@@ -121,36 +127,6 @@ int main( int argc, char *argv[] )
 		return 1;
 	}
 
-	
-	// Perform the colormapping
-	BVTColorImage cimg;
-	ret = BVTColorMapper_MapImage(mapper, img, &cimg);
-	if( ret != 0 )
-	{
-		printf("BVTColorMapper_MapImage: ret=%d\n", ret);
-		return 1;
-	}
-	printf("\n");
-	
-	/////////////////////////////////////////////////////////
-	// Check the image height and width out
-	BVTColorImage_GetHeight(cimg, &height);
-	printf("BVTColorImage_GetHeight: %d\n", height);
-	BVTColorImage_GetWidth(cimg, &width);
-	printf("BVTColorImage_GetWidth: %d\n", width);
-
-	
-	// Save it to a PPM (PortablePixMap)
-	ret = BVTColorImage_SavePPM(cimg, "cimg.ppm");
-	if( ret != 0 )
-	{
-		printf("BVTColorImage_SavePPM: ret=%d\n", ret);
-		return 1;
-	}
-
-	// Clean up
-	BVTColorImage_Destroy(cimg);
-	BVTMagImage_Destroy(img);
 	BVTColorMapper_Destroy(mapper);
 	BVTPing_Destroy(ping);
 	BVTSonar_Destroy(son);
