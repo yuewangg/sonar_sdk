@@ -76,29 +76,13 @@ int main( int argc, char *argv[] )
 	float * range;
 	unsigned short * intensity;
 	int * count;
-	ret = BVTRangeProfile_GetCount(rgp,count);
-	if( ret != 0 )
-	{
-		printf("BVTHead_GetRangeCount: ret=%d\n", ret);
-		return 1;
-	}
+	BVTRangeProfile_GetCount(rgp,count);
 
 	BVTRangeProfile_GetIntensityValue(rgp,0,intensity);
 
+	BVTRangeProfile_GetRangeValue(rgp,0,range);
 
-	ret = BVTRangeProfile_GetRangeValue(rgp,0,range);
-	if( ret != 0 )
-	{
-		printf("BVTHead_GetRangeValue: ret=%d\n", ret);
-		return 1;
-	}
-
-	ret = BVTRangeProfile_GetBearingValue(rgp,0,range);
-	if( ret != 0 )
-	{
-		printf("BVTHead_GetRangeValue: ret=%d\n", ret);
-		return 1;
-	}
+	BVTRangeProfile_GetBearingValue(rgp,0,range);
 	
 	// Clean up
 	BVTRangeProfile_Destroy(rgp);
