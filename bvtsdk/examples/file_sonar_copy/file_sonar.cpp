@@ -10,7 +10,7 @@
 
 #include <bvt_sdk.h>
 
-char DataFile[] = "../../data/20m.son";
+char DataFile[] = "../../data/0330Data.son";
 
 int main( int argc, char *argv[] )
 {
@@ -56,7 +56,7 @@ int main( int argc, char *argv[] )
 
     // Now, get a ping!
 	BVTPing ping = NULL;
-	ret = BVTHead_GetPing(head, 200, &ping);
+	ret = BVTHead_GetPing(head, 1000, &ping);
 	if( ret != 0 )
 	{
 		printf("BVTHead_GetPing: ret=%d\n", ret);
@@ -73,16 +73,32 @@ int main( int argc, char *argv[] )
 		return 1;
 	}
 
-	float * range;
-	unsigned short * intensity;
-	int * count;
-	BVTRangeProfile_GetCount(rgp,count);
+	float range;
+	float bearing;
+	float maxAngle;
+	unsigned short intensity;
+	int count1;
+	int count2;
+	BVTRangeProfile_GetFOVMaxAngle(rgp,&maxAngle);
+	printf("BVTmaxAngle: %f\n", maxAngle);
 
-	BVTRangeProfile_GetIntensityValue(rgp,0,intensity);
 
-	BVTRangeProfile_GetRangeValue(rgp,0,range);
 
-	BVTRangeProfile_GetBearingValue(rgp,0,range);
+
+
+	BVTRangeProfile_GetCount(rgp,&count1);
+	printf("BVTcount: %d\n", count1);
+
+	BVTRangeProfile_GetValidCount(rgp,&count2);
+	printf("BVTcount: %d\n", count2);
+
+	BVTRangeProfile_GetIntensityValue(rgp,500,&intensity);
+	printf("BVTintensity: %d\n", intensity);
+	BVTRangeProfile_GetRangeValue(rgp,500,&range);
+	printf("BVTrunge: %f\n", range);
+
+	BVTRangeProfile_GetBearingValue(rgp,500,&bearing);
+	printf("BVTbearing: %f\n", bearing);
 	
 	// Clean up
 	BVTRangeProfile_Destroy(rgp);
