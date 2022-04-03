@@ -33,9 +33,12 @@ int main( int argc, char *argv[] )
 		printf("BVTSonar_Open: ret=%d\n", ret);
 		return 1;
 	}
+
+	// Make sure we have the right number of heads
 	int heads = -1;
 	BVTSonar_GetHeadCount(son, &heads);
 	printf("BVTSonar_GetHeadCount: %d\n", heads);
+
 
 	// Get the first head
 	BVTHead head = NULL;
@@ -51,57 +54,57 @@ int main( int argc, char *argv[] )
 	BVTHead_GetPingCount(head, &pings);
 	printf("BVTHead_GetPingCount: %d\n", pings);
 
+    // Check the min and max range in this file
+    float min_range, max_range;
+    BVTHead_GetMinimumRange(head, &min_range);
+    BVTHead_GetMaximumRange(head, &max_range);
+    printf("BVTHead_GetMinimumRange: %0.2f\n", min_range );
+    printf("BVTHead_GetMaximumRange: %0.2f\n", max_range );
+
     BVTImageGenerator ig = BVTImageGenerator_Create();
     BVTImageGenerator_SetHead(ig, head);
 
     // Now, get a ping!
 	BVTPing ping = NULL;
-	ret = BVTHead_GetPing(head, 1000, &ping);
+	ret = BVTHead_GetPing(head, 0, &ping);
 	if( ret != 0 )
 	{
 		printf("BVTHead_GetPing: ret=%d\n", ret);
 		return 1;
 	}
 	
-	// Generate an RangeProfile from the ping
-	BVTRangeProfile rgp;
-	
-	ret = BVTImageGenerator_GetRangeProfile(ig, ping, &rgp);
+	// Generate an image from the ping
+	BVTMagImage img;
+	ret = BVTImageGenerator_GetImageXY(ig, ping, &img);
 	if( ret != 0 )
 	{
-		printf("BVTHead_GetRangeCount: ret=%d\n", ret);
+		printf("BVTImageGenerator_GetImageXY: ret=%d\n", ret);
 		return 1;
 	}
 
-	float range;
-	float bearing;
-	float maxAngle;
-	unsigned short intensity;
-	int count1;
-	int count2;
-	BVTRangeProfile_GetFOVMaxAngle(rgp,&maxAngle);
-	printf("BVTmaxAngle: %f\n", maxAngle);
+	printf("\n");
 
-
-
-
-
-	BVTRangeProfile_GetCount(rgp,&count1);
-	printf("BVTcount: %d\n", count1);
-
-	BVTRangeProfile_GetValidCount(rgp,&count2);
-	printf("BVTcount: %d\n", count2);
-
-	BVTRangeProfile_GetIntensityValue(rgp,500,&intensity);
-	printf("BVTintensity: %d\n", intensity);
-	BVTRangeProfile_GetRangeValue(rgp,500,&range);
-	printf("BVTrunge: %f\n", range);
-
-	BVTRangeProfile_GetBearingValue(rgp,500,&bearing);
-	printf("BVTbearing: %f\n", bearing);
+	/////////////////////////////////////////////////////////
 	
+	// Check the image height and width out
+	int height;
+	BVTMagImage_GetHeight(img, &height);
+	printf("BVTMagImage_GetHeight: %d\n", height);
+	int width;
+	BVTMagImage_GetWidth(img, &width);
+	printf("BVTMagImage_GetWidth: %d\n", width);
+	int row = 300;
+	int col = 300;
+	double pbearing;
+	double prange;
+	BVTMagImage_GetPixelRelativeBearing ( img, row, col, &pbearing); 	
+	BVTMagImage_GetPixelRange ( img, row, col, &prange);
+	printf("BVTMagImage_GetPixelRelativeBearing: %f\n", pbearing);
+	printf("BVTMagImage_GetPixelRange: %f\n", prange);
+	/////////////////////////////////////////////////////////
+
 	// Clean up
-	BVTRangeProfile_Destroy(rgp);
+	BVTMagImage_Destroy(img);
 	BVTPing_Destroy(ping);
 	BVTSonar_Destroy(son);
 	return 0;
