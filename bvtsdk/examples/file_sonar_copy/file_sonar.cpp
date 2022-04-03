@@ -11,6 +11,20 @@
 #include <bvt_sdk.h>
 
 char DataFile[] = "../../data/0330Data.son";
+int nPing = 1000;
+int nhead = 0;
+int min_row = 300;
+int max_row = 306;
+int min_col = 300;
+int max_col = 306;
+
+int a=max_col - min_col + 1;
+int b=max_row - min_row + 1;
+int c = a * b;
+double pbearing;
+double prange;
+//double lprange[c];
+//double lpbearing[c];
 
 int main( int argc, char *argv[] )
 {
@@ -42,7 +56,7 @@ int main( int argc, char *argv[] )
 
 	// Get the first head
 	BVTHead head = NULL;
-	ret = BVTSonar_GetHead(son, 0, &head);
+	ret = BVTSonar_GetHead(son, nhead, &head);
 	if( ret != 0 )
 	{
 		printf("BVTSonar_GetHead: ret=%d\n", ret);
@@ -66,7 +80,7 @@ int main( int argc, char *argv[] )
 
     // Now, get a ping!
 	BVTPing ping = NULL;
-	ret = BVTHead_GetPing(head, 0, &ping);
+	ret = BVTHead_GetPing(head, nPing, &ping);
 	if( ret != 0 )
 	{
 		printf("BVTHead_GetPing: ret=%d\n", ret);
@@ -93,16 +107,18 @@ int main( int argc, char *argv[] )
 	int width;
 	BVTMagImage_GetWidth(img, &width);
 	printf("BVTMagImage_GetWidth: %d\n", width);
-	int row = 300;
-	int col = 300;
-	double pbearing;
-	double prange;
-	BVTMagImage_GetPixelRelativeBearing ( img, row, col, &pbearing); 	
-	BVTMagImage_GetPixelRange ( img, row, col, &prange);
-	printf("BVTMagImage_GetPixelRelativeBearing: %f\n", pbearing);
-	printf("BVTMagImage_GetPixelRange: %f\n", prange);
-	/////////////////////////////////////////////////////////
 
+	for(int i = min_col; i < max_col; i++)
+	{
+		for (int j = min_row; j < max_row; j++)
+		{
+			BVTMagImage_GetPixelRelativeBearing ( img, j, i, &pbearing); 	
+			BVTMagImage_GetPixelRange ( img, j, i, &prange);
+			printf("BVTMagImage_GetPixelRelativeBearing: %f\n", pbearing);
+			printf("BVTMagImage_GetPixelRange: %f\n", prange);
+		}
+	/////////////////////////////////////////////////////////
+	}
 	// Clean up
 	BVTMagImage_Destroy(img);
 	BVTPing_Destroy(ping);
