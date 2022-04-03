@@ -18,13 +18,13 @@ int max_row = 306;
 int min_col = 300;
 int max_col = 306;
 
-int a=max_col - min_col + 1;
-int b=max_row - min_row + 1;
-int c = a * b;
+//int a=max_col - min_col + 1;
+//int b=max_row - min_row + 1;
+//int c = a * b;
 double pbearing;
 double prange;
-//double lprange[c];
-//double lpbearing[c];
+double lprange[36];
+double lpbearing[36];
 
 int main( int argc, char *argv[] )
 {
@@ -114,10 +114,16 @@ int main( int argc, char *argv[] )
 		{
 			BVTMagImage_GetPixelRelativeBearing ( img, j, i, &pbearing); 	
 			BVTMagImage_GetPixelRange ( img, j, i, &prange);
-			printf("BVTMagImage_GetPixelRelativeBearing: %f\n", pbearing);
-			printf("BVTMagImage_GetPixelRange: %f\n", prange);
+			int nindex=(max_row - min_row)*(i-min_col)+(j-min_row);
+			lpbearing[nindex] = pbearing;
+			lprange[nindex] = prange;
 		}
 	/////////////////////////////////////////////////////////
+	}
+
+	for(int i = 0; i<49 ;i++)
+	{
+		printf("%f ",lpbearing[i]);
 	}
 	// Clean up
 	BVTMagImage_Destroy(img);
