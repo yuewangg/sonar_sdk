@@ -42,7 +42,7 @@ int main( int argc, char *argv[] )
 
 	// Get the first head
 	BVTHead head = NULL;
-	ret = BVTSonar_GetHead(son, 1000, &head);
+	ret = BVTSonar_GetHead(son, 0, &head);
 	if( ret != 0 )
 	{
 		printf("BVTSonar_GetHead: ret=%d\n", ret);
@@ -66,7 +66,7 @@ int main( int argc, char *argv[] )
 
     // Now, get a ping!
 	BVTPing ping = NULL;
-	ret = BVTHead_GetPing(head, 0, &ping);
+	ret = BVTHead_GetPing(head, 1000, &ping);
 	if( ret != 0 )
 	{
 		printf("BVTHead_GetPing: ret=%d\n", ret);
@@ -89,7 +89,7 @@ int main( int argc, char *argv[] )
 	// Check the image height and width out
 	float height;
 	BVTMagImage_GetMaxRangeOfPixel(img, &height);
-	printf("BVTMagImage_GetMaxRangeOfPixel: %d\n", height);
+	printf("BVTMagImage_GetMaxRangeOfPixel: %f\n", height);
 
 
 

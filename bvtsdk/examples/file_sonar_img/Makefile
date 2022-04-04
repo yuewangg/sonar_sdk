@@ -3,9 +3,9 @@ LDLIBS=-lbvtsdk
 CPPFLAGS=-I../../include
 CC=g++
 
-all: file_sonar
+all: file_sonar_img
 clean:
-	rm file_sonar file_sonar.o
+	rm file_sonar_img file_sonar_img.o
 
-file_sonar: file_sonar.o
+file_sonar: file_sonar_img.o
 
