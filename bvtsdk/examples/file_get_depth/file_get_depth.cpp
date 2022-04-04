@@ -10,7 +10,7 @@
 
 #include <bvt_sdk.h>
 
-char DataFile[] = "../../data/swimmer.son";
+char DataFile[] = "../../data/0330Data.son";
 
 int main( int argc, char *argv[] )
 {
@@ -42,7 +42,7 @@ int main( int argc, char *argv[] )
 
 	// Get the first head
 	BVTHead head = NULL;
-	ret = BVTSonar_GetHead(son, 0, &head);
+	ret = BVTSonar_GetHead(son, 1000, &head);
 	if( ret != 0 )
 	{
 		printf("BVTSonar_GetHead: ret=%d\n", ret);
@@ -87,71 +87,15 @@ int main( int argc, char *argv[] )
 	/////////////////////////////////////////////////////////
 	
 	// Check the image height and width out
-	int height;
-	BVTMagImage_GetHeight(img, &height);
-	printf("BVTMagImage_GetHeight: %d\n", height);
-	int width;
-	BVTMagImage_GetWidth(img, &width);
-	printf("BVTMagImage_GetWidth: %d\n", width);
-	
-	// Save it to a PGM (PortableGreyMap)
-	ret = BVTMagImage_SavePGM(img, "img.pgm");
-	if( ret != 0 )
-	{
-		printf("BVTMagImage_SavePGM: ret=%d\n", ret);
-		return 1;
-	}
+	float height;
+	BVTMagImage_GetMaxRangeOfPixel(img, &height);
+	printf("BVTMagImage_GetMaxRangeOfPixel: %d\n", height);
 
-	/////////////////////////////////////////////////////////
-	
-	// Build a color mapper
-	BVTColorMapper mapper;
-	mapper = BVTColorMapper_Create();
-	if( mapper == NULL )
-	{
-		printf("BVTColorMapper_Create: failed\n");
-		return 1;
-	}
-	
-	// Load the bone colormap
-	ret = BVTColorMapper_Load(mapper, "bone.cmap");
-	if( ret != 0 )
-	{
-		printf("BVTColorMapper_Load: ret=%d\n", ret);
-		return 1;
-	}
 
-	
-	// Perform the colormapping
-	BVTColorImage cimg;
-	ret = BVTColorMapper_MapImage(mapper, img, &cimg);
-	if( ret != 0 )
-	{
-		printf("BVTColorMapper_MapImage: ret=%d\n", ret);
-		return 1;
-	}
-	printf("\n");
-	
-	/////////////////////////////////////////////////////////
-	// Check the image height and width out
-	BVTColorImage_GetHeight(cimg, &height);
-	printf("BVTColorImage_GetHeight: %d\n", height);
-	BVTColorImage_GetWidth(cimg, &width);
-	printf("BVTColorImage_GetWidth: %d\n", width);
-
-	
-	// Save it to a PPM (PortablePixMap)
-	ret = BVTColorImage_SavePPM(cimg, "cimg.ppm");
-	if( ret != 0 )
-	{
-		printf("BVTColorImage_SavePPM: ret=%d\n", ret);
-		return 1;
-	}
 
 	// Clean up
-	BVTColorImage_Destroy(cimg);
+
 	BVTMagImage_Destroy(img);
-	BVTColorMapper_Destroy(mapper);
 	BVTPing_Destroy(ping);
 	BVTSonar_Destroy(son);
 	return 0;
