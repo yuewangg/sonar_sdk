@@ -66,7 +66,7 @@ int main( int argc, char *argv[] )
 
     // Now, get a ping!
 	BVTPing ping = NULL;
-	ret = BVTHead_GetPing(head, 0, &ping);
+	ret = BVTHead_GetPing(head, 1000, &ping);
 	if( ret != 0 )
 	{
 		printf("BVTHead_GetPing: ret=%d\n", ret);
@@ -74,8 +74,8 @@ int main( int argc, char *argv[] )
 	}
 	
 	// Generate an image from the ping
-	BVTMagImage img;
-	ret = BVTImageGenerator_GetImageXY(ig, ping, &img);
+	BVTRangeProfile rps;
+	ret = BVTImageGenerator_GetRangeProfile(ig, ping, &rps);
 	if( ret != 0 )
 	{
 		printf("BVTImageGenerator_GetImageXY: ret=%d\n", ret);
@@ -85,17 +85,34 @@ int main( int argc, char *argv[] )
 	printf("\n");
 
 	/////////////////////////////////////////////////////////
-	
-	// Check the image height and width out
-	float height;
-	BVTMagImage_GetMaxRangeOfPixel(img, &height);
-	printf("BVTMagImage_GetMaxRangeOfPixel: %f\n", height);
+	int count;
+	BVTRangeProfile_GetCount(rps,&count);
+	printf("a%d",count);
+
+	double rres;
+	BVTRangeProfile_GetRangeResolution(rps,&rres);
+	printf("b%f",rres);
+
+	double bres;
+	BVTRangeProfile_GetRangeResolution(rps,&bres);
+	printf("c%f",bres);
+
+
+	float range;
+	BVTRangeProfile_GetRangeValue(rps,400,&range);
+	printf("d%f",range);
+
+	float bearing;
+	BVTRangeProfile_GetBearingValue(rps,400,&bearing);
+	printf("d%f",bearing);
+
+
 
 
 
 	// Clean up
 
-	BVTMagImage_Destroy(img);
+	BVTRangeProfile_Destroy(rps);
 	BVTPing_Destroy(ping);
 	BVTSonar_Destroy(son);
 	return 0;
