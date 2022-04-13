@@ -8,7 +8,7 @@
 
 # since this file is sourced either use the provided _CATKIN_SETUP_DIR
 # or fall back to the destination set at configure time
-: ${_CATKIN_SETUP_DIR:=/home/paicaloid/catkin_ws/src/zeabus_imaging_sonar/devel_isolated}
+: ${_CATKIN_SETUP_DIR:=/home/yue/catkin_ws/src/imaging_sonar/devel_isolated}
 _SETUP_UTIL="$_CATKIN_SETUP_DIR/_setup_util.py"
 unset _CATKIN_SETUP_DIR
 

@@ -1,2 +1,2 @@
 
--G Unix Makefiles -DCATKIN_DEVEL_PREFIX=/home/paicaloid/catkin_ws/src/zeabus_imaging_sonar/devel_isolated -DCMAKE_INSTALL_PREFIX=/home/paicaloid/catkin_ws/src/zeabus_imaging_sonar/install_isolated
+-G Unix Makefiles -DCATKIN_DEVEL_PREFIX=/home/yue/catkin_ws/src/imaging_sonar/devel_isolated -DCMAKE_INSTALL_PREFIX=/home/yue/catkin_ws/src/imaging_sonar/install_isolated
