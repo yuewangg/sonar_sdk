@@ -15,8 +15,8 @@ from cv_bridge import CvBridge, CvBridgeError
 #from _sonar_msg import *
 #from zeabus_imaging_sonar.sr53v import sonar_srv
 #from _sonar_srv import *
-from zeabus_imaging_sonar.msg import sonar_msg
-from zeabus_imaging_sonar.srv import sonar_srv
+from imaging_sonar.msg import sonar_msg
+from imaging_sonar.srv import sonar_srv
 
 # Instantiate CvBridge
 bridge = CvBridge()

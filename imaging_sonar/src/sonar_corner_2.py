@@ -10,8 +10,8 @@ import math
 from sensor_msgs.msg import CompressedImage, Image
 from cv_bridge import CvBridge, CvBridgeError
 
-from zeabus_imaging_sonar.msg import sonar_msg
-from zeabus_imaging_sonar.srv import sonar_srv
+from imaging_sonar.msg import sonar_msg
+from imaging_sonar.srv import sonar_srv
 
 bridge = CvBridge()
 

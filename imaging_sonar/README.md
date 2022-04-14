@@ -1,6 +1,6 @@
-# zeabus_imaging_sonar
+# imaging_sonar
 # Description
-We use 64-bit Linux BlueView SDK libraries to implement Blueview Imaging Sonar M900-130 with ROS system for AUV name "ZEABUS" from Kasetsart University. You must have BlueView SDK before using zeabus_imaging_sonar package. 
+We use 64-bit Linux BlueView SDK libraries to implement Blueview Imaging Sonar M900-130 with ROS system for AUV name from Kasetsart University. You must have BlueView SDK before using imaging_sonar package. 
 
 Inside BlueView SDK folder, it has 6 folders
 - colormaps

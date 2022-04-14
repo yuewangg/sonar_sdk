@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(zeabus_imaging_sonar)
+project(imaging_sonar)
 
 
 find_package(catkin REQUIRED COMPONENTS
