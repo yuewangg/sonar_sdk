@@ -14,9 +14,9 @@
 int main(int argc, char** argv){
 
     /// Setup Path ///
-	std::string rootPath = "/home/yue/URPC2022/sonar_sdk/bvtsdk/";
+	std::string rootPath = "/home/yue/workspace/bvtsdk/";
 	std::string dataPath = rootPath + "data/";
-	std::string fileName = "20m.son";
+	std::string fileName = "0330Data.son";
 	std::string fullPath = dataPath + fileName;
 
     printf("SDK Ready!!!\n") ;

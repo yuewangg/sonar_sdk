@@ -37,11 +37,11 @@ void ThresholdChange( int , void*){
 
 int main(int argc, char** argv){
     /// Setup Path ///
-	std::string rootPath = "/home/yue/URPC2022/sonar_sdk/bvtsdk/";
+	std::string rootPath = "/home/yue/workspace/bvtsdk/";
 	//std::string dataPath = rootPath + "data/";
 	std::string mapperPath = rootPath + "colormaps/jet.cmap";
-	std::string fileName = "20m.son";
-	std::string storePath = "/home/paicaloid/catkin_ws/src/cpp_sonar/data" ;
+	std::string fileName = "0330Data.son";
+	std::string storePath = "/home/yue/URPC2022/data/" ;
 	std::string fullPath = storePath + fileName;
 
     pos = 1500;
