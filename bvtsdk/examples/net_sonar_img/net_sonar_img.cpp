@@ -11,6 +11,8 @@
 #include <iostream>
 #include <sstream>
 
+#define ENABLE_SONAR 1
+
 using namespace std;
 
 std::string num2str(int i)
@@ -19,6 +21,8 @@ std::string num2str(int i)
     ss<<i;
     return ss.str();
 }
+
+
 
 int main( void )
 {
@@ -60,61 +64,78 @@ int main( void )
         }
 	}
 	
-	// Set the range window to be 1m to 40m
+	// SetuP
 	BVTHead_SetRange(head, 1, 40);
-	BVTHead_SetSoundSpeed(head,1500);
-	BVTHead_SetGainAdjustment(head,0);
-	BVTHead_SetTVGSlope(head,0);
+	//BVTHead_SetSoundSpeed(head,1500);
+	//BVTHead_SetGainAdjustment(head,0);
+	//BVTHead_SetTVGSlope(head,0);
 	////////////////////////////////////////////////
 	// Now, Create a file to save some pings to
 	BVTSonar file = BVTSonar_Create();
+	BVTSonar feedback = BVTSonar_Create();
 	if( file == NULL )
 	{
 		printf("BVTSonar_Create: failed\n");
 		return 1;
 	}
-	
-	ret = BVTSonar_CreateFile(file, "out.son", son, "");
-	if( ret != 0 )
+		if( feedback == NULL )
 	{
-		printf("BVTSonar_CreateFile: ret=%d\n", ret);
+		printf("BVTSonar_Create: failed\n");
 		return 1;
 	}
+	
+	BVTSonar_CreateFile(file, "son/out.son", son, "");
+	BVTSonar_CreateFile(feedback, "son/reget.son", son, "");
+	BVTSonar_CreateFile(son, "son/work.son", son, "");
+
 
 	// Request the first head
 	BVTHead out_head = NULL;
-	ret = BVTSonar_GetHead(file, 0, &out_head);
-	if( ret != 0 )
-	{
-		printf("BVTSonar_GetHead: ret=%d\n", ret);
-		return 1;
-	}
+	BVTHead re_head = NULL;
+	BVTSonar_GetHead(file, 0, &out_head);
+	BVTSonar_GetHead(feedback, 0, &re_head); 
 
+    BVTImageGenerator ig = BVTImageGenerator_Create();
+    BVTImageGenerator_SetHead(ig, head);
 	
 	////////////////////////////////////////////////
 	// Now, let's go get some pings!
-    int num_pings = 10;
-	for (int i=0; i < num_pings; i++)
+	const char* img_filename=NULL;
+	BVTPing ping = NULL;
+	BVTPing reping = NULL;
+	BVTMagImage img;
+	BVTMagImage reimg;
+	double bearing;
+	double range;
+	while(ENABLE_SONAR)
 	{
-		BVTPing ping = NULL;
-		ret = BVTHead_GetPing(head, -1, &ping);
-		if( ret != 0 )
+		BVTHead_GetPing(head, -1, &ping);
+		BVTImageGenerator_GetImageXY(ig, ping, &img);
+
+		int pings = -1;
+		BVTHead_GetPingCount(head, &pings);
+		std::string num;
+		num=num2str(pings);
+		std::string img_name = "img/0_" + num + ".pgm";
+		img_filename = img_name.c_str();
+		// Save it to a PGM (PortableGreyMap)
+		BVTMagImage_SavePGM(img, img_filename);
+		BVTHead_PutPing(out_head, ping);
+		if(0)
 		{
-			printf("BVTHead_GetPing: ret=%d\n", ret);
-			return 1;
+			BVTHead_GetPing(head, -1, &reping);   //-1重新设置为反馈ping值
+			BVTImageGenerator_GetImageXY(ig, reping, &reimg);
+			BVTMagImage_GetPixelRelativeBearing ( img, 222, 222, &bearing); //222重新设置为反馈像素值
+			BVTMagImage_GetPixelRange ( img, 222, 222, &range);
+			BVTHead_PutPing(re_head, reping);
 		}
+		
 
-		ret = BVTHead_PutPing(out_head, ping);
-		if( ret != 0 )
-		{
-			printf("BVTHead_PutPing: ret=%d\n", ret);
-			return 1;
-		}
-		BVTPing_Destroy(ping);
-	}
+	}	
 
-    printf("Saved %d pings to out.son file\n", num_pings);
-
+	BVTPing_Destroy(reping);
+	BVTPing_Destroy(ping);
+	BVTSonar_Destroy(feedback);
 	BVTSonar_Destroy(file);
 	BVTSonar_Destroy(son);
 	return 0;
