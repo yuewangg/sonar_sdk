@@ -10,7 +10,7 @@
 
 #include <bvt_sdk.h>
 
-char DataFile[] = "../../data/swimmer.son";
+char DataFile[] = "../../data/20m.son";
 
 int main( int argc, char *argv[] )
 {
@@ -66,7 +66,7 @@ int main( int argc, char *argv[] )
 
     // Now, get a ping!
 	BVTPing ping = NULL;
-	ret = BVTHead_GetPing(head, 0, &ping);
+	ret = BVTHead_GetPing(head, 20, &ping);
 	if( ret != 0 )
 	{
 		printf("BVTHead_GetPing: ret=%d\n", ret);
@@ -93,6 +93,12 @@ int main( int argc, char *argv[] )
 	int width;
 	BVTMagImage_GetWidth(img, &width);
 	printf("BVTMagImage_GetWidth: %d\n", width);
+	unsigned short pixel = 0;
+
+	BVTMagImage_GetPixel 	(img,100,100, &pixel); 		
+	printf("MagImage_GetPixel: %d\n", pixel);
+
+
 	
 	// Save it to a PGM (PortableGreyMap)
 	ret = BVTMagImage_SavePGM(img, "img.pgm");
