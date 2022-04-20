@@ -10,7 +10,7 @@
 
 #include <bvt_sdk.h>
 
-char DataFile[] = "../../data/20m.son";
+char DataFile[] = "../../data/0330Data.son";
 
 int main( int argc, char *argv[] )
 {
@@ -72,7 +72,13 @@ int main( int argc, char *argv[] )
 		printf("BVTHead_GetPing: ret=%d\n", ret);
 		return 1;
 	}
-	
+	BVTEventMark a = BVTEventMark_Create();
+	double timetamp;
+	BVTEventMark_GetTimestamp(a,&timetamp);
+	printf("%f\n",timetamp);
+	int number;
+	BVTEventMark_GetPingNumber(a,&number);
+	printf("%d\n",number);	
 	// Generate an image from the ping
 	BVTMagImage img;
 	ret = BVTImageGenerator_GetImageXY(ig, ping, &img);
@@ -155,6 +161,7 @@ int main( int argc, char *argv[] )
 	}
 
 	// Clean up
+	BVTEventMark_Destroy(a); 	
 	BVTColorImage_Destroy(cimg);
 	BVTMagImage_Destroy(img);
 	BVTColorMapper_Destroy(mapper);

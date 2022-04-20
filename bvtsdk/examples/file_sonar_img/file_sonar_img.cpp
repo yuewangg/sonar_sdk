@@ -11,6 +11,8 @@
 #include <bvt_sdk.h>
 #include <iostream>
 #include <sstream>
+#include <sys/time.h>
+#include <unistd.h>
 using namespace std;
 
 std::string num2str(int i)
@@ -76,7 +78,7 @@ int main( int argc, char *argv[] )
 
     // Now, get a ping!
 	BVTPing ping = NULL;
-
+	struct timeval time;
 	const char* img_filename=NULL;
 	for(int a = 0; a < pings; a = a + 1)
 	{
@@ -89,24 +91,13 @@ int main( int argc, char *argv[] )
 		}
 		
 		// Generate an image from the ping
-		BVTMagImage img;
-		ret = BVTImageGenerator_GetImageXY(ig, ping, &img);
-		if( ret != 0 )
-		{
-			printf("BVTImageGenerator_GetImageXY: ret=%d\n", ret);
-			return 1;
-		}
-		std::string num;
-		num=num2str(a);
-		std::string img_name = "img/img" + num + ".pgm";
-		img_filename = img_name.c_str();
-		// Save it to a PGM (PortableGreyMap)
-		ret = BVTMagImage_SavePGM(img, img_filename);
-		if( ret != 0 )
-		{
-			printf("BVTMagImage_SavePGM: ret=%d\n", ret);
-			return 1;
-		}
+	
+    	gettimeofday(&time, NULL);
+    	printf("s: %ld, ms: %ld\n", time.tv_sec, (time.tv_sec*1000 + time.tv_usec/1000));
+		int pingnumber;
+		BVTPing_GetPingNumber(ping,&pingnumber);
+		printf("%d\n",pingnumber);
+
 	}
 	/////////////////////////////////////////////////////////
 	
