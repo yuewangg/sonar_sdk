@@ -18,50 +18,56 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+
+
+
 #define ENABLE_SONAR 1
+#define DEST_PORT 8000   //端口号
+#define DSET_IP_ADDRESS  "127.0.0.1 " // server文件所在PC的IP
 
 using namespace std;
 
-std::string num2str(int i)
-{
-    std::stringstream ss;
-    ss<<i;
-    return ss.str();
-}
 
+int UDPWrite(int sock_fd,char *ip,char *port,void *send_buf,int bufLen)
+{
+    if(sock_fd < 0)
+    {
+        perror("socket");
+        exit(1);
+    }
+
+  /* 设置address */
+  struct sockaddr_in addr_serv;
+  int len;
+  memset(&addr_serv, 0, sizeof(addr_serv));
+  addr_serv.sin_family = AF_INET;
+  addr_serv.sin_addr.s_addr = inet_addr(ip);
+  addr_serv.sin_port = htons((unsigned short)atoi(port));
+  len = sizeof(addr_serv);
+
+  int send_num;
+
+  send_num = sendto(sock_fd, send_buf, bufLen, 0, (struct sockaddr *)&addr_serv, len);
+
+  if(send_num < 0)
+  {
+      perror("sendto error:");
+      exit(1);
+  }
+
+  if(send_num == bufLen)
+  {
+    return 1;
+  }
+  else
+  {
+  	return 0;
+  }
+}
 
 
 int main(int argc, char * argv[])
 {
-
-	//检查命令行参数是否匹配
-	if(argc != 3)
-	{
-		printf("请传递对方的ip和端口号");
-		return -1;
-	}
-	
-	int port = atoi(argv[2]);//从命令行获取端口号
-	if( port<1025 || port>65535 )//0~1024一般给系统使用，一共可以分配到65535
-	{
-		printf("端口号范围应为1025~65535");
-		return -1;
-	}
-		//1 创建udp通信socket
-	int udp_socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
-	if(udp_socket_fd == -1)
-	{
-		perror("socket failed!\n");
-		return -1;
-	}
-        
-	//设置目的IP地址
-    struct sockaddr_in dest_addr = {0};
-    dest_addr.sin_family = AF_INET;//使用IPv4协议
-    dest_addr.sin_port = htons(port);//设置接收方端口号
-    dest_addr.sin_addr.s_addr = inet_addr(argv[1]); //设置接收方IP 
-
-    char buf[2048] = {0};
 	
 	int ret;
 	
@@ -109,72 +115,113 @@ int main(int argc, char * argv[])
 	////////////////////////////////////////////////
 	// Now, Create a file to save some pings to
 	BVTSonar file = BVTSonar_Create();
-	BVTSonar feedback = BVTSonar_Create();
 	if( file == NULL )
-	{
-		printf("BVTSonar_Create: failed\n");
-		return 1;
-	}
-		if( feedback == NULL )
 	{
 		printf("BVTSonar_Create: failed\n");
 		return 1;
 	}
 	
 	BVTSonar_CreateFile(file, "son/out.son", son, "");
-	BVTSonar_CreateFile(feedback, "son/reget.son", son, "");
 	BVTSonar_CreateFile(son, "son/work.son", son, "");
 
 
 	// Request the first head
 	BVTHead out_head = NULL;
-	BVTHead re_head = NULL;
 	BVTSonar_GetHead(file, 0, &out_head);
-	BVTSonar_GetHead(feedback, 0, &re_head); 
 
     BVTImageGenerator ig = BVTImageGenerator_Create();
     BVTImageGenerator_SetHead(ig, head);
 	
 	////////////////////////////////////////////////
 	// Now, let's go get some pings!
-	const char* img_filename=NULL;
-	BVTPing ping = NULL;
-	BVTPing reping = NULL;
-	BVTMagImage img;
-	BVTMagImage reimg;
-	double bearing;
-	double range;
+	int height;
+	int width;
+	int pings = -1;
+	int oldpings = -1;
+	unsigned long ping_time;
+	string s = ";"; 
+	string row = "row:"; 
+	string col = "col"; 
 	while(ENABLE_SONAR)
 	{
-		BVTHead_GetPing(head, -1, &ping);
-		BVTImageGenerator_GetImageXY(ig, ping, &img);
-
-		int pings = -1;
-		BVTHead_GetPingCount(head, &pings);
-		std::string num;
-		num=num2str(pings);
-		std::string img_name = "img/0_" + num + ".pgm";
-		img_filename = img_name.c_str();
-		// Save it to a PGM (PortableGreyMap)
-		BVTMagImage_SavePGM(img, img_filename);
-		BVTHead_PutPing(out_head, ping);
-		if(0)
+		BVTPing ping = NULL;
+		BVTMagImage img;
+		ret = BVTHead_GetPing(head, -1, &ping);
+		
+		if(BVTHead_GetPingCount(head, &pings) != oldpings)
 		{
-			BVTHead_GetPing(head, -1, &reping);   //-1重新设置为反馈ping值
-			BVTImageGenerator_GetImageXY(ig, reping, &reimg);
-			BVTMagImage_GetPixelRelativeBearing ( img, 222, 222, &bearing); //222重新设置为反馈像素值
-			BVTMagImage_GetPixelRange ( img, 222, 222, &range);
-			BVTHead_PutPing(re_head, reping);
+
+		BVTHead_GetPing(head, pings, &ping);
+		BVTImageGenerator_GetImageXY(ig, ping, &img);
+		
+		BVTMagImage_GetHeight(img, &height );
+		BVTMagImage_GetWidth(img, &width) ; 
+		stringstream ss;
+		struct timeval time;
+    	gettimeofday(&time, NULL);
+
+		ping_time = (time.tv_sec*1000 + time.tv_usec/1000);
+
+		ss<<pings<<s<<ping_time<<s<<row<<1<<s;
+		char send_buf[65536] = {};
+		
+		int sock_fd = socket(AF_INET, SOCK_DGRAM, 0);
+		for ( int i=1; i<height; i++)
+		{
+			for ( int j=1; j<width; j++)
+			{
+
+				unsigned short opixel;
+				BVTMagImage_GetPixel(img,i,j,&opixel);
+				ss<<opixel<<s;
+			}
+			if(i % 30 == 0)
+			{
+				
+				strncpy(send_buf, ss.str().c_str(), ss.str().length() + 1);
+				if(UDPWrite(sock_fd,"127.0.0.1 ","8000",send_buf,strlen(send_buf)) == 1)
+				{
+					printf("fasong chenggong");
+				}
+				
+        		ss.str("");
+        		if (ss.eof())
+        		{
+            		ss.clear();
+        		}
+				ss<<pings<<s<<ping_time<<s<<row<<(i+1)<<s;
+			}
+			
+		}
+
+		strncpy(send_buf, ss.str().c_str(), ss.str().length() + 1);
+		if(UDPWrite(sock_fd,"127.0.0.1 ","8000",send_buf,strlen(send_buf)) == 1)
+		{
+			printf("fasong chenggong");
+		}
+				
+        ss.str("");
+        if (ss.eof())
+        {
+        	ss.clear();
+        }	
+
+		close(sock_fd);
+		
+    	
+
+		BVTHead_PutPing(out_head, ping);
+		oldpings = pings;
 		}
 		
-        sendto(udp_socket_fd, buf, strlen(buf), 0, (struct sockaddr *)&dest_addr,sizeof(dest_addr)); 
-		memset(buf,0,sizeof(buf));//清空存留消息		
+		
+		BVTPing_Destroy(ping);
+		BVTMagImage_Destroy(img);
 	}
 
-    close(udp_socket_fd);
-	BVTPing_Destroy(reping);
-	BVTPing_Destroy(ping);
-	BVTSonar_Destroy(feedback);
+
+
+
 	BVTSonar_Destroy(file);
 	BVTSonar_Destroy(son);
 	return 0;
