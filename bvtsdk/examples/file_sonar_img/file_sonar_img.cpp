@@ -19,6 +19,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <cstdio>
+#include <math.h>
+#include<algorithm>
 using namespace std;
 
 
@@ -130,7 +133,8 @@ int main( int argc, char *argv[] )
 
 				unsigned short opixel;
 				BVTMagImage_GetPixel(img,i,j,&opixel);
-				ss<<opixel<<s;
+
+				ss<<opixel;
 				
 			}
 				/* socket文件描述符 */
