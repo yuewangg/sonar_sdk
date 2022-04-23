@@ -66,19 +66,14 @@ int main( int argc, char *argv[] )
 
     // Now, get a ping!
 	BVTPing ping = NULL;
-	ret = BVTHead_GetPing(head, 20, &ping);
+	ret = BVTHead_GetPing(head, 1000, &ping);
 	if( ret != 0 )
 	{
 		printf("BVTHead_GetPing: ret=%d\n", ret);
 		return 1;
 	}
 	BVTEventMark a = BVTEventMark_Create();
-	double timetamp;
-	BVTEventMark_GetTimestamp(a,&timetamp);
-	printf("%f\n",timetamp);
-	int number;
-	BVTEventMark_GetPingNumber(a,&number);
-	printf("%d\n",number);	
+
 	// Generate an image from the ping
 	BVTMagImage img;
 	ret = BVTImageGenerator_GetImageXY(ig, ping, &img);
@@ -100,12 +95,32 @@ int main( int argc, char *argv[] )
 	BVTMagImage_GetWidth(img, &width);
 	printf("BVTMagImage_GetWidth: %d\n", width);
 	unsigned short pixel = 0;
+    unsigned short* bitBuffer;	
+    BVTMagImage_GetBits(img, &bitBuffer);
+	int picSize = sizeof(bitBuffer);
+	printf("%d",bitBuffer[86957]);
+    unsigned short pix;	
+	BVTMagImage_GetPixel(img,0,529,&pix);
 
-	BVTMagImage_GetPixel 	(img,100,100, &pixel); 		
-	printf("MagImage_GetPixel: %d\n", pixel);
+	printf("MagImage_GetSize: %d\n", pix);
+	unsigned short* rowBuffer;
+	BVTMagImage_GetRow(img,0,&rowBuffer);
+	for ( int i=1; i<1234; i++)
+	{
+		printf("%d;",rowBuffer[i]);
+	}
 
-
+	BVTMagImage_GetPixel(img,68,529,&pix);
 	
+
+	printf("MagImage_GetSize: %d\n", pix);
+
+	BVTMagImage_GetRow(img,680,&rowBuffer);
+	for ( int j=1; j<1234; j++)
+	{
+		printf("%d;",rowBuffer[j]);
+	}
+		
 	// Save it to a PGM (PortableGreyMap)
 	ret = BVTMagImage_SavePGM(img, "img.pgm");
 	if( ret != 0 )
