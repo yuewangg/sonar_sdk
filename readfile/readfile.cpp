@@ -70,12 +70,10 @@ void setPkgHead(unsigned int picIndex,unsigned char pkgIndex, unsigned int dataS
     dataSize >>= 8;
     pkgData[6] = dataSize&0xff;
 }
-
+char DataFile[] = "../../data/0330Data.son";
 int main(int argc, char * argv[])
 {
-	
 	int ret;
-	
 	// Create a new BVTSonar Object
 	BVTSonar son = BVTSonar_Create();
 	if( son == NULL )
@@ -84,8 +82,11 @@ int main(int argc, char * argv[])
 		return 1;
 	}
 
-	// Open the first sonar
-	ret = BVTSonar_Open(son, "NET", "192.168.1.45"); // default ip address
+	// Open the sonar
+    if ( argc == 2 )
+        strcpy( DataFile, argv[1] );
+
+	ret = BVTSonar_Open(son, "FILE", DataFile);
 	if( ret != 0 )
 	{
 		printf("BVTSonar_Open: ret=%d\n", ret);
@@ -93,55 +94,38 @@ int main(int argc, char * argv[])
 	}
 
 	// Make sure we have the right number of heads
-	int heads;
+	int heads = -1;
 	BVTSonar_GetHeadCount(son, &heads);
 	printf("BVTSonar_GetHeadCount: %d\n", heads);
+
 
 	// Get the first head
 	BVTHead head = NULL;
 	ret = BVTSonar_GetHead(son, 0, &head);
 	if( ret != 0 )
 	{
-        // some sonars start at head 1 instead of zero...
-        ret = BVTSonar_GetHead(son, 1, &head);
-        if( ret != 0 )
-        {
-            printf("BVTSonar_GetHead: ret=%d\n", ret);
-            return 1;
-
-        }
-	}
-	
-	// SetuP
-	BVTHead_SetRange(head, 1, 40);
-	//BVTHead_SetSoundSpeed(head,1500);
-	//BVTHead_SetGainAdjustment(head,0);
-	//BVTHead_SetTVGSlope(head,0);
-	////////////////////////////////////////////////
-	// Now, Create a file to save some pings to
-	BVTSonar file = BVTSonar_Create();
-	if( file == NULL )
-	{
-		printf("BVTSonar_Create: failed\n");
+		printf("BVTSonar_GetHead: ret=%d\n", ret);
 		return 1;
 	}
 	
-	BVTSonar_CreateFile(file, "son/out.son", son, "");
-	BVTSonar_CreateFile(son, "son/work.son", son, "");
+	// Check the ping count
+	int pings = -1;
+	BVTHead_GetPingCount(head, &pings);
+	printf("BVTHead_GetPingCount: %d\n", pings);
 
-
-	// Request the first head
-	BVTHead out_head = NULL;
-	BVTSonar_GetHead(file, 0, &out_head);
+    // Check the min and max range in this file
+    float min_range, max_range;
+    BVTHead_GetMinimumRange(head, &min_range);
+    BVTHead_GetMaximumRange(head, &max_range);
+    printf("BVTHead_GetMinimumRange: %0.2f\n", min_range );
+    printf("BVTHead_GetMaximumRange: %0.2f\n", max_range );
+	
 
     BVTImageGenerator ig = BVTImageGenerator_Create();
     BVTImageGenerator_SetHead(ig, head);
-	
-	////////////////////////////////////////////////
-	// Now, let's go get some pings!
+
 	int height, width, picSize;
 
-	int pings, oldpings = -1;
     int key,pkgCnt,cnt,sendNum,toSendDataNum,test;
     int i,k,sum,sendCnt = 0;;
     //struct ImgDataStr imgData;
@@ -151,14 +135,12 @@ int main(int argc, char * argv[])
 
     unsigned short* bitBuffer;
 
-	while(ENABLE_SONAR)
+	for (int i = 1; i < pings; i++)
 	{
 		BVTPing ping = NULL;
 		BVTMagImage img;
-		ret = BVTHead_GetPing(head, -1, &ping);
+		ret = BVTHead_GetPing(head, i, &ping);
 		
-		if(BVTHead_GetPingCount(head, &pings) != oldpings)
-		{
 
 		BVTImageGenerator_GetImageXY(ig, ping, &img);
 		
@@ -181,7 +163,7 @@ int main(int argc, char * argv[])
             pPkg = &pkgData[PACKAGE_HEAD_LENGTH];
             memcpy(pPkg,pImg,toSendDataNum);
 
-            setPkgHead(pings, pkgCnt, picSize);
+            setPkgHead(i, pkgCnt, picSize);
 
             //cout<<"pkgCnt"<<(int)pkgHead.pkgIndex<<"send:" << pkgHead.size<<endl;
 
@@ -200,21 +182,14 @@ int main(int argc, char * argv[])
                 return 1;
             }
         }
-		
 
 		close(sock_fd);
-		
-		BVTHead_PutPing(out_head, ping);
-		oldpings = pings;
-		}
-		
-		
+
 		BVTPing_Destroy(ping);
 		BVTMagImage_Destroy(img);
-	}
 
-
-	BVTSonar_Destroy(file);
+        usleep(800000);
+    }
 	BVTSonar_Destroy(son);
 	return 0;
 }
