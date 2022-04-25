@@ -27,7 +27,7 @@ using namespace std;
 
 unsigned char pkgData[PKG_MAX_LENGTH];
 
-int UDPWrite(int sock_fd,char *ip,char *port,const void *send_buf,int bufLen)
+int UDPWrite(int sock_fd,const void *send_buf,int bufLen)
 {
     if(sock_fd < 0)
     {
@@ -40,8 +40,8 @@ int UDPWrite(int sock_fd,char *ip,char *port,const void *send_buf,int bufLen)
   int len;
   memset(&addr_serv, 0, sizeof(addr_serv));
   addr_serv.sin_family = AF_INET;
-  addr_serv.sin_addr.s_addr = inet_addr(ip);
-  addr_serv.sin_port = htons((unsigned short)atoi(port));
+  addr_serv.sin_addr.s_addr = inet_addr(DSET_IP_ADDRESS);
+  addr_serv.sin_port = htons((unsigned short)atoi(DEST_PORT));
   len = sizeof(addr_serv);
 
   int send_num;
@@ -196,7 +196,7 @@ int main(int argc, char * argv[])
             //cout<<"pkgCnt"<<(int)pkgHead.pkgIndex<<"send:" << pkgHead.size<<endl;
 
 
-			cnt = UDPWrite(sock_fd,DSET_IP_ADDRESS,DEST_PORT,(const void*)&pkgData,toSendDataNum+PACKAGE_HEAD_LENGTH);
+			cnt = UDPWrite(sock_fd,(const void*)&pkgData,toSendDataNum+PACKAGE_HEAD_LENGTH);
 		
 
             //为数据包发送预留时间，减少快速发送大量数据造成网络拥堵
@@ -207,7 +207,7 @@ int main(int argc, char * argv[])
 
             if (cnt < 0){
                 printf("ERROR writing to udp socket:");
-                return;
+                return 1;
             }
         }
 		

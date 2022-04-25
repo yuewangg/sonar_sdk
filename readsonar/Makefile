@@ -1,6 +1,6 @@
-LDFLAGS=-L../../lib -Wl,-rpath ../../lib
+LDFLAGS=-L../bvtsdk/lib -Wl,-rpath ../bvtsdk/lib
 LDLIBS=-lbvtsdk
-CPPFLAGS=-I../../include
+CPPFLAGS=-I../bvtsdk/include
 CC=g++
 
 all: readsonar
