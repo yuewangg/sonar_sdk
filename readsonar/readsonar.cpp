@@ -5,9 +5,9 @@
 #include <arpa/inet.h>
 #include <bvt_sdk.h>
 
-#define PKG_MAX_LENGTH 60012
+#define PKG_MAX_LENGTH 65500
 #define PACKAGE_HEAD_LENGTH 7 //包头长度
-#define MAX_PACKAGE_SIZE (1460*2)//最大数据包长度
+#define MAX_PACKAGE_SIZE PKG_MAX_LENGTH//最大数据包长度
 #define MAX_PACKAGE_DATA_NUM (MAX_PACKAGE_SIZE-PACKAGE_HEAD_LENGTH) //除去包头最大数据量
 #define ENABLE_SONAR 1
 #define DEST_PORT "8000"   //端口号
