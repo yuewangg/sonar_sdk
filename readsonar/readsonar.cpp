@@ -54,7 +54,7 @@ int UDPWrite(int sock_fd,const void *send_buf,int bufLen)
   }
 }
 
-void setPkgHead(unsigned int picIndex,unsigned char pkgIndex, unsigned int dataSize){
+void setPkgHead(unsigned int picIndex,unsigned char pkgIndex, unsigned int wigth, unsigned int high){
     pkgData[0] = picIndex&0xff;
     picIndex >>= 8;
 
@@ -62,13 +62,13 @@ void setPkgHead(unsigned int picIndex,unsigned char pkgIndex, unsigned int dataS
 
     pkgData[2] = pkgIndex;
 
-    pkgData[3] = dataSize&0xff;
-    dataSize >>= 8;
-    pkgData[4] = dataSize&0xff;
-    dataSize >>= 8;
-    pkgData[5] = dataSize&0xff;
-    dataSize >>= 8;
-    pkgData[6] = dataSize&0xff;
+    pkgData[3] = wigth&0xff;
+    wigth >>= 8;
+    pkgData[4] = wigth&0xff;
+
+    pkgData[5] = high&0xff;
+    high >>= 8;
+    pkgData[6] = high&0xff;
 }
 
 int main(int argc, char * argv[])
@@ -181,7 +181,7 @@ int main(int argc, char * argv[])
             pPkg = &pkgData[PACKAGE_HEAD_LENGTH];
             memcpy(pPkg,pImg,toSendDataNum);
 
-            setPkgHead(pings, pkgCnt, picSize);
+            setPkgHead(pings, pkgCnt, width,height);
 
             //cout<<"pkgCnt"<<(int)pkgHead.pkgIndex<<"send:" << pkgHead.size<<endl;
 
