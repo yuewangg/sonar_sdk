@@ -4,18 +4,19 @@
 #include <unistd.h> //read & write g++
 #include <arpa/inet.h>
 #include <bvt_sdk.h>
+#include<iostream>
 
-#define PKG_MAX_LENGTH 60012
+#define PKG_MAX_LENGTH 65500
 #define PACKAGE_HEAD_LENGTH 7 //包头长度
 #define MAX_PACKAGE_SIZE (1460*2)//最大数据包长度
-#define MAX_PACKAGE_DATA_NUM (MAX_PACKAGE_SIZE-PACKAGE_HEAD_LENGTH) //除去包头最大数据量
+#define MAX_PACKAGE_DATA_NUM (PKG_MAX_LENGTH-PACKAGE_HEAD_LENGTH) //除去包头最大数据量
 #define ENABLE_SONAR 1
 #define DEST_PORT "8000"   //端口号
 #define DSET_IP_ADDRESS "127.0.0.1 " // server文件所在PC的IP
 
 using namespace std;
 
-unsigned char pkgData[PKG_MAX_LENGTH];
+unsigned short pkgData[PKG_MAX_LENGTH];
 
 int UDPWrite(int sock_fd,const void *send_buf,int bufLen)
 {
@@ -92,7 +93,10 @@ int main(int argc, char * argv[])
 		printf("BVTSonar_Open: ret=%d\n", ret);
 		return 1;
 	}
-
+    BVTSonar file = BVTSonar_Create();
+	BVTSonar_CreateFile(file, "son/out.son", son, "");
+	BVTHead out_head = NULL;
+	BVTSonar_GetHead(file, 0, &out_head);
 	// Make sure we have the right number of heads
 	int heads = -1;
 	BVTSonar_GetHeadCount(son, &heads);
@@ -129,19 +133,19 @@ int main(int argc, char * argv[])
     int key,pkgCnt,cnt,sendNum,toSendDataNum,test;
     int i,k,sum,sendCnt = 0;;
     //struct ImgDataStr imgData;
-    unsigned char *pPkg;
+    unsigned short *pPkg;
     unsigned short *pImg;
 	unsigned long ping_time;
 
     unsigned short* bitBuffer;
+    int sock_fd = socket(AF_INET, SOCK_DGRAM, 0);
 
-	for (int i = 1; i < pings; i++)
+	for (int i = 1; i < 10; i++)
 	{
 		BVTPing ping = NULL;
 		BVTMagImage img;
 		ret = BVTHead_GetPing(head, i, &ping);
 		
-
 		BVTImageGenerator_GetImageXY(ig, ping, &img);
 		
 		BVTMagImage_GetHeight(img, &height );
@@ -149,7 +153,7 @@ int main(int argc, char * argv[])
 
         BVTMagImage_GetBits(img, &bitBuffer);
 		
-		int sock_fd = socket(AF_INET, SOCK_DGRAM, 0);
+
         
         picSize = height*width;
 
@@ -165,7 +169,7 @@ int main(int argc, char * argv[])
 
             setPkgHead(i, pkgCnt, picSize);
 
-            //cout<<"pkgCnt"<<(int)pkgHead.pkgIndex<<"send:" << pkgHead.size<<endl;
+            //cout<<"pkgCnt"<<(int)pkgCnt<<"send:" << picSize<<endl;
 
 
 			cnt = UDPWrite(sock_fd,(const void*)&pkgData,toSendDataNum+PACKAGE_HEAD_LENGTH);
@@ -173,23 +177,42 @@ int main(int argc, char * argv[])
 
             //为数据包发送预留时间，减少快速发送大量数据造成网络拥堵
             //可以逐步增大时间到不出现或很少 error frame 为止
-            if(sendCnt%5 == 4)
+            if(sendCnt%2 == 2)
                 usleep(2000);
 
+        
 
+
+		    
             if (cnt < 0){
                 printf("ERROR writing to udp socket:");
                 return 1;
             }
         }
+        
+        if(i==8)
+        {
+            BVTHead_GetPing(out_head, 5, &ping);
+            BVTImageGenerator_GetImageXY(ig, ping, &img);
+            double range;
+            BVTMagImage_GetPixelRange(img,500,500,&range);
+            printf("%f\n",range);
+            double bearing;
+            BVTMagImage_GetPixelRelativeBearing(img,500,500,&bearing);
+            printf("%f",bearing);
 
-		close(sock_fd);
+        }
+        
+        BVTHead_PutPing(out_head, ping);
+		
 
 		BVTPing_Destroy(ping);
 		BVTMagImage_Destroy(img);
 
         usleep(800000);
     }
+    close(sock_fd);
+    BVTSonar_Destroy(file);
 	BVTSonar_Destroy(son);
 	return 0;
 }
