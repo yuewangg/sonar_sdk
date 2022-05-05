@@ -161,7 +161,7 @@ int main(int argc, char * argv[])
 		{
 
 		BVTImageGenerator_GetImageXY(ig, ping, &img);
-		
+
 		BVTMagImage_GetHeight(img, &height );
 		BVTMagImage_GetWidth(img, &width) ; 
 
