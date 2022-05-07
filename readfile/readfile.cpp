@@ -16,7 +16,7 @@
 
 using namespace std;
 
-unsigned short pkgData[PKG_MAX_LENGTH];
+unsigned char pkgData[PKG_MAX_LENGTH];
 
 int UDPWrite(int sock_fd,const void *send_buf,int bufLen)
 {
@@ -55,7 +55,7 @@ int UDPWrite(int sock_fd,const void *send_buf,int bufLen)
   }
 }
 
-void setPkgHead(unsigned int picIndex,unsigned char pkgIndex, unsigned int dataSize){
+void setPkgHead(unsigned int picIndex,unsigned int pkgIndex, unsigned int width, unsigned int height){
     pkgData[0] = picIndex&0xff;
     picIndex >>= 8;
 
@@ -63,13 +63,13 @@ void setPkgHead(unsigned int picIndex,unsigned char pkgIndex, unsigned int dataS
 
     pkgData[2] = pkgIndex;
 
-    pkgData[3] = dataSize&0xff;
-    dataSize >>= 8;
-    pkgData[4] = dataSize&0xff;
-    dataSize >>= 8;
-    pkgData[5] = dataSize&0xff;
-    dataSize >>= 8;
-    pkgData[6] = dataSize&0xff;
+    pkgData[3] = width&0xff;
+    width >>= 8;
+    pkgData[4] = width&0xff;
+
+    pkgData[5] = height&0xff;
+    height >>= 8;
+    pkgData[6] = height&0xff;
 }
 char DataFile[] = "../../data/0330Data.son";
 int main(int argc, char * argv[])
@@ -133,15 +133,19 @@ int main(int argc, char * argv[])
     int key,pkgCnt,cnt,sendNum,toSendDataNum,test;
     int i,k,sum,sendCnt = 0;;
     //struct ImgDataStr imgData;
-    unsigned short *pPkg;
+    unsigned char *pPkg;
     unsigned short *pImg;
 	unsigned long ping_time;
 
     unsigned short* bitBuffer;
+    unsigned short pixel;
+    double range;
     int sock_fd = socket(AF_INET, SOCK_DGRAM, 0);
+    int j;
 
 	for (int i = 1; i < 10; i++)
 	{
+        //unsigned short* bitBuffer;
 		BVTPing ping = NULL;
 		BVTMagImage img;
 		ret = BVTHead_GetPing(head, i, &ping);
@@ -157,6 +161,19 @@ int main(int argc, char * argv[])
         
         picSize = height*width;
 
+        //BVTMagImage_GetPixel(img,680,668,&pixel);
+        //cout<<"pixel"<<pixel<<endl;
+        //BVTMagImage_GetPixel(img,680,669,&pixel);
+        //cout<<"pixel"<<pixel<<endl;
+        //BVTMagImage_GetPixel(img,679,668,&pixel);
+        //cout<<"pixel"<<pixel<<endl;
+        //BVTMagImage_GetPixel(img,679,669,&pixel);
+        //cout<<"pixel"<<pixel<<endl;
+        //BVTMagImage_GetPixelRange(img,301,668,&range);
+        //cout<<"range"<<range<<endl;
+        //BVTMagImage_GetPixelRange(img,300,568,&range);
+        //cout<<"range"<<range<<endl;
+
 		for(pkgCnt=0,sendNum=0;sendNum<picSize;pkgCnt++,sendNum += MAX_PACKAGE_DATA_NUM){
             if(sendNum + MAX_PACKAGE_DATA_NUM < picSize){
                 toSendDataNum = MAX_PACKAGE_DATA_NUM;
@@ -165,9 +182,13 @@ int main(int argc, char * argv[])
 
             pImg = bitBuffer+MAX_PACKAGE_DATA_NUM*pkgCnt;
             pPkg = &pkgData[PACKAGE_HEAD_LENGTH];
-            memcpy(pPkg,pImg,toSendDataNum);
+            //memcpy(pPkg,pImg,toSendDataNum);
 
-            setPkgHead(i, pkgCnt, picSize);
+            for(j=0;j<toSendDataNum;j++)
+
+                pPkg[j] = pImg[j];
+
+            setPkgHead(i, pkgCnt, width,height);
 
             //cout<<"pkgCnt"<<(int)pkgCnt<<"send:" << picSize<<endl;
 
@@ -177,8 +198,8 @@ int main(int argc, char * argv[])
 
             //为数据包发送预留时间，减少快速发送大量数据造成网络拥堵
             //可以逐步增大时间到不出现或很少 error frame 为止
-            if(sendCnt%2 == 2)
-                usleep(2000);
+            
+            usleep(80000);
 
         
 
