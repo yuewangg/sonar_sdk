@@ -54,7 +54,7 @@ int UDPWrite(int sock_fd,const void *send_buf,int bufLen)
   }
 }
 
-void setPkgHead(unsigned int picIndex,unsigned char pkgIndex, unsigned int wigth, unsigned int high){
+void setPkgHead(unsigned int picIndex,unsigned int pkgIndex, unsigned int width, unsigned int height){
     pkgData[0] = picIndex&0xff;
     picIndex >>= 8;
 
@@ -62,13 +62,13 @@ void setPkgHead(unsigned int picIndex,unsigned char pkgIndex, unsigned int wigth
 
     pkgData[2] = pkgIndex;
 
-    pkgData[3] = wigth&0xff;
-    wigth >>= 8;
-    pkgData[4] = wigth&0xff;
+    pkgData[3] = width&0xff;
+    width >>= 8;
+    pkgData[4] = width&0xff;
 
-    pkgData[5] = high&0xff;
-    high >>= 8;
-    pkgData[6] = high&0xff;
+    pkgData[5] = height&0xff;
+    height >>= 8;
+    pkgData[6] = height&0xff;
 }
 
 int main(int argc, char * argv[])
