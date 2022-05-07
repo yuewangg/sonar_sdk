@@ -4,11 +4,12 @@
 #include <unistd.h> //read & write g++
 #include <arpa/inet.h>
 #include <bvt_sdk.h>
+#include<iostream>
 
 #define PKG_MAX_LENGTH 65500
 #define PACKAGE_HEAD_LENGTH 7 //包头长度
-#define MAX_PACKAGE_SIZE PKG_MAX_LENGTH//最大数据包长度
-#define MAX_PACKAGE_DATA_NUM (MAX_PACKAGE_SIZE-PACKAGE_HEAD_LENGTH) //除去包头最大数据量
+#define MAX_PACKAGE_SIZE (1460*2)//最大数据包长度
+#define MAX_PACKAGE_DATA_NUM (PKG_MAX_LENGTH-PACKAGE_HEAD_LENGTH) //除去包头最大数据量
 #define ENABLE_SONAR 1
 #define DEST_PORT "8000"   //端口号
 #define DSET_IP_ADDRESS "127.0.0.1 " // server文件所在PC的IP
@@ -54,7 +55,7 @@ int UDPWrite(int sock_fd,const void *send_buf,int bufLen)
   }
 }
 
-void setPkgHead(unsigned int picIndex,unsigned char pkgIndex, unsigned int wigth, unsigned int high){
+void setPkgHead(unsigned int picIndex,unsigned int pkgIndex, unsigned int width, unsigned int height){
     pkgData[0] = picIndex&0xff;
     picIndex >>= 8;
 
@@ -62,20 +63,18 @@ void setPkgHead(unsigned int picIndex,unsigned char pkgIndex, unsigned int wigth
 
     pkgData[2] = pkgIndex;
 
-    pkgData[3] = wigth&0xff;
-    wigth >>= 8;
-    pkgData[4] = wigth&0xff;
+    pkgData[3] = width&0xff;
+    width >>= 8;
+    pkgData[4] = width&0xff;
 
-    pkgData[5] = high&0xff;
-    high >>= 8;
-    pkgData[6] = high&0xff;
+    pkgData[5] = height&0xff;
+    height >>= 8;
+    pkgData[6] = height&0xff;
 }
-
+char DataFile[] = "../../data/0330Data.son";
 int main(int argc, char * argv[])
 {
-	
 	int ret;
-	
 	// Create a new BVTSonar Object
 	BVTSonar son = BVTSonar_Create();
 	if( son == NULL )
@@ -84,64 +83,53 @@ int main(int argc, char * argv[])
 		return 1;
 	}
 
-	// Open the first sonar
-	ret = BVTSonar_Open(son, "NET", "192.168.1.45"); // default ip address
+	// Open the sonar
+    if ( argc == 2 )
+        strcpy( DataFile, argv[1] );
+
+	ret = BVTSonar_Open(son, "FILE", DataFile);
 	if( ret != 0 )
 	{
 		printf("BVTSonar_Open: ret=%d\n", ret);
 		return 1;
 	}
-
+    BVTSonar file = BVTSonar_Create();
+	BVTSonar_CreateFile(file, "son/out.son", son, "");
+	BVTHead out_head = NULL;
+	BVTSonar_GetHead(file, 0, &out_head);
 	// Make sure we have the right number of heads
-	int heads;
+	int heads = -1;
 	BVTSonar_GetHeadCount(son, &heads);
 	printf("BVTSonar_GetHeadCount: %d\n", heads);
+
 
 	// Get the first head
 	BVTHead head = NULL;
 	ret = BVTSonar_GetHead(son, 0, &head);
 	if( ret != 0 )
 	{
-        // some sonars start at head 1 instead of zero...
-        ret = BVTSonar_GetHead(son, 1, &head);
-        if( ret != 0 )
-        {
-            printf("BVTSonar_GetHead: ret=%d\n", ret);
-            return 1;
-
-        }
-	}
-	
-	// SetuP
-	BVTHead_SetRange(head, 1, 40);
-	//BVTHead_SetSoundSpeed(head,1500);
-	//BVTHead_SetGainAdjustment(head,0);
-	//BVTHead_SetTVGSlope(head,0);
-	////////////////////////////////////////////////
-	// Now, Create a file to save some pings to
-	BVTSonar file = BVTSonar_Create();
-	if( file == NULL )
-	{
-		printf("BVTSonar_Create: failed\n");
+		printf("BVTSonar_GetHead: ret=%d\n", ret);
 		return 1;
 	}
 	
-	BVTSonar_CreateFile(file, "son/out.son", son, "");
-	BVTSonar_CreateFile(son, "son/work.son", son, "");
+	// Check the ping count
+	int pings = -1;
+	BVTHead_GetPingCount(head, &pings);
+	printf("BVTHead_GetPingCount: %d\n", pings);
 
-
-	// Request the first head
-	BVTHead out_head = NULL;
-	BVTSonar_GetHead(file, 0, &out_head);
+    // Check the min and max range in this file
+    float min_range, max_range;
+    BVTHead_GetMinimumRange(head, &min_range);
+    BVTHead_GetMaximumRange(head, &max_range);
+    printf("BVTHead_GetMinimumRange: %0.2f\n", min_range );
+    printf("BVTHead_GetMaximumRange: %0.2f\n", max_range );
+	
 
     BVTImageGenerator ig = BVTImageGenerator_Create();
     BVTImageGenerator_SetHead(ig, head);
-	
-	////////////////////////////////////////////////
-	// Now, let's go get some pings!
+
 	int height, width, picSize;
 
-	int pings, oldpings = -1;
     int key,pkgCnt,cnt,sendNum,toSendDataNum,test;
     int i,k,sum,sendCnt = 0;;
     //struct ImgDataStr imgData;
@@ -150,26 +138,41 @@ int main(int argc, char * argv[])
 	unsigned long ping_time;
 
     unsigned short* bitBuffer;
+    unsigned short pixel;
+    double range;
+    int sock_fd = socket(AF_INET, SOCK_DGRAM, 0);
+    int j;
 
-	while(ENABLE_SONAR)
+	for (int i = 1; i < 10; i++)
 	{
+        //unsigned short* bitBuffer;
 		BVTPing ping = NULL;
 		BVTMagImage img;
-		ret = BVTHead_GetPing(head, -1, &ping);
+		ret = BVTHead_GetPing(head, i, &ping);
 		
-		if(BVTHead_GetPingCount(head, &pings) != oldpings)
-		{
-
 		BVTImageGenerator_GetImageXY(ig, ping, &img);
-
+		
 		BVTMagImage_GetHeight(img, &height );
 		BVTMagImage_GetWidth(img, &width) ; 
 
         BVTMagImage_GetBits(img, &bitBuffer);
 		
-		int sock_fd = socket(AF_INET, SOCK_DGRAM, 0);
+
         
         picSize = height*width;
+
+        //BVTMagImage_GetPixel(img,680,668,&pixel);
+        //cout<<"pixel"<<pixel<<endl;
+        //BVTMagImage_GetPixel(img,680,669,&pixel);
+        //cout<<"pixel"<<pixel<<endl;
+        //BVTMagImage_GetPixel(img,679,668,&pixel);
+        //cout<<"pixel"<<pixel<<endl;
+        //BVTMagImage_GetPixel(img,679,669,&pixel);
+        //cout<<"pixel"<<pixel<<endl;
+        //BVTMagImage_GetPixelRange(img,301,668,&range);
+        //cout<<"range"<<range<<endl;
+        //BVTMagImage_GetPixelRange(img,300,568,&range);
+        //cout<<"range"<<range<<endl;
 
 		for(pkgCnt=0,sendNum=0;sendNum<picSize;pkgCnt++,sendNum += MAX_PACKAGE_DATA_NUM){
             if(sendNum + MAX_PACKAGE_DATA_NUM < picSize){
@@ -179,11 +182,15 @@ int main(int argc, char * argv[])
 
             pImg = bitBuffer+MAX_PACKAGE_DATA_NUM*pkgCnt;
             pPkg = &pkgData[PACKAGE_HEAD_LENGTH];
-            memcpy(pPkg,pImg,toSendDataNum);
+            //memcpy(pPkg,pImg,toSendDataNum);
 
-            setPkgHead(pings, pkgCnt, width,height);
+            for(j=0;j<toSendDataNum;j++)
 
-            //cout<<"pkgCnt"<<(int)pkgHead.pkgIndex<<"send:" << pkgHead.size<<endl;
+                pPkg[j] = pImg[j];
+
+            setPkgHead(i, pkgCnt, width,height);
+
+            //cout<<"pkgCnt"<<(int)pkgCnt<<"send:" << picSize<<endl;
 
 
 			cnt = UDPWrite(sock_fd,(const void*)&pkgData,toSendDataNum+PACKAGE_HEAD_LENGTH);
@@ -191,30 +198,42 @@ int main(int argc, char * argv[])
 
             //为数据包发送预留时间，减少快速发送大量数据造成网络拥堵
             //可以逐步增大时间到不出现或很少 error frame 为止
-            if(sendCnt%5 == 4)
-                usleep(2000);
+            
+            usleep(80000);
+
+        
 
 
+		    
             if (cnt < 0){
                 printf("ERROR writing to udp socket:");
                 return 1;
             }
         }
+        
+        if(i==8)
+        {
+            BVTHead_GetPing(out_head, 5, &ping);
+            BVTImageGenerator_GetImageXY(ig, ping, &img);
+            double range;
+            BVTMagImage_GetPixelRange(img,500,500,&range);
+            printf("%f\n",range);
+            double bearing;
+            BVTMagImage_GetPixelRelativeBearing(img,500,500,&bearing);
+            printf("%f",bearing);
+
+        }
+        
+        BVTHead_PutPing(out_head, ping);
 		
 
-		close(sock_fd);
-		
-		BVTHead_PutPing(out_head, ping);
-		oldpings = pings;
-		}
-		
-		
 		BVTPing_Destroy(ping);
 		BVTMagImage_Destroy(img);
-	}
 
-
-	BVTSonar_Destroy(file);
+        usleep(800000);
+    }
+    close(sock_fd);
+    BVTSonar_Destroy(file);
 	BVTSonar_Destroy(son);
 	return 0;
 }
