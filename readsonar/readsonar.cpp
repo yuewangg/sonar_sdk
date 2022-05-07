@@ -150,7 +150,7 @@ int main(int argc, char * argv[])
 	unsigned long ping_time;
 
     unsigned short* bitBuffer;
-
+    int j;
 	while(ENABLE_SONAR)
 	{
 		BVTPing ping = NULL;
@@ -179,7 +179,10 @@ int main(int argc, char * argv[])
 
             pImg = bitBuffer+MAX_PACKAGE_DATA_NUM*pkgCnt;
             pPkg = &pkgData[PACKAGE_HEAD_LENGTH];
-            memcpy(pPkg,pImg,toSendDataNum);
+            //memcpy(pPkg,pImg,toSendDataNum);
+            for(j=0;j<toSendDataNum;j++)
+
+                pPkg[j] = pImg[j];
 
             setPkgHead(pings, pkgCnt, width,height);
 
