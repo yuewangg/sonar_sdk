@@ -33,8 +33,8 @@ while True:
             j=0
             for i in receive_data:
                 j+=1
-                #if j <= 10:
-                print(i,end=";")      # 打印接收的内容
+                if j <= 10:
+                    print(i,end=";")      # 打印接收的内容
             print("end",j)
         
             m+=1
