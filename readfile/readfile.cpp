@@ -199,7 +199,7 @@ int main(int argc, char * argv[])
             //为数据包发送预留时间，减少快速发送大量数据造成网络拥堵
             //可以逐步增大时间到不出现或很少 error frame 为止
             
-            usleep(80000);
+            usleep(2000);
 
         
 
