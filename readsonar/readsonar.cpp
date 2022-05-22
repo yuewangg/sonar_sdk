@@ -10,14 +10,14 @@
 #define MAX_PACKAGE_SIZE PKG_MAX_LENGTH//最大数据包长度
 #define MAX_PACKAGE_DATA_NUM (MAX_PACKAGE_SIZE-PACKAGE_HEAD_LENGTH) //除去包头最大数据量
 #define ENABLE_SONAR 1
-#define DEST_PORT "8000"   //端口号
+#define DEST_PORT 8000   //端口号
 #define DSET_IP_ADDRESS "127.0.0.1 " // server文件所在PC的IP
 
 using namespace std;
 
 unsigned char pkgData[PKG_MAX_LENGTH];
 
-int UDPWrite(int sock_fd,const void *send_buf,int bufLen)
+int UDPWrite(int sock_fd,const void *send_buf,int bufLen,unsigned short port)
 {
     if(sock_fd < 0)
     {
@@ -31,7 +31,7 @@ int UDPWrite(int sock_fd,const void *send_buf,int bufLen)
   memset(&addr_serv, 0, sizeof(addr_serv));
   addr_serv.sin_family = AF_INET;
   addr_serv.sin_addr.s_addr = inet_addr(DSET_IP_ADDRESS);
-  addr_serv.sin_port = htons((unsigned short)atoi(DEST_PORT));
+  addr_serv.sin_port = htons(port);
   len = sizeof(addr_serv);
 
   int send_num;
@@ -54,7 +54,8 @@ int UDPWrite(int sock_fd,const void *send_buf,int bufLen)
   }
 }
 
-void setPkgHead(unsigned int picIndex,unsigned int pkgIndex, unsigned int width, unsigned int height){
+
+void setPkgHead(unsigned int picIndex,unsigned int pkgIndex, unsigned int width, unsigned int height, unsigned int OriginCol, unsigned int OriginRow){
     pkgData[0] = picIndex&0xff;
     picIndex >>= 8;
 
@@ -69,6 +70,14 @@ void setPkgHead(unsigned int picIndex,unsigned int pkgIndex, unsigned int width,
     pkgData[5] = height&0xff;
     height >>= 8;
     pkgData[6] = height&0xff;
+
+    pkgData[7] = OriginCol&0xff;
+    OriginCol >>= 8;
+    pkgData[8] = OriginCol&0xff;
+
+    pkgData[9] = OriginRow&0xff;
+    OriginRow >>= 8;
+    pkgData[10] = OriginRow&0xff;
 }
 
 int main(int argc, char * argv[])
@@ -139,26 +148,26 @@ int main(int argc, char * argv[])
 	
 	////////////////////////////////////////////////
 	// Now, let's go get some pings!
-	int height, width, picSize;
+	int height, width, picSize, row, column,j;
 
 	int pings, oldpings = -1;
     int key,pkgCnt,cnt,sendNum,toSendDataNum,test;
-    int i,k,sum,sendCnt = 0;;
-    //struct ImgDataStr imgData;
+    int i,k,sum,sendCnt = 0;
     unsigned char *pPkg;
     unsigned short *pImg;
 	unsigned long ping_time;
+    double range, resolution;
 
     unsigned short* bitBuffer;
-    int j;
+	int sock_fd = socket(AF_INET, SOCK_DGRAM, 0);
+
 	while(ENABLE_SONAR)
 	{
 		BVTPing ping = NULL;
 		BVTMagImage img;
 		ret = BVTHead_GetPing(head, -1, &ping);
 		
-		if(BVTHead_GetPingCount(head, &pings) != oldpings)
-		{
+		if(BVTHead_GetPingCount(head, &pings) != oldpings){
 
 		BVTImageGenerator_GetImageXY(ig, ping, &img);
 
@@ -166,8 +175,14 @@ int main(int argc, char * argv[])
 		BVTMagImage_GetWidth(img, &width) ; 
 
         BVTMagImage_GetBits(img, &bitBuffer);
+
+	    BVTMagImage_GetRangeResolution(img,&resolution);
+
+	    BVTMagImage_GetOriginCol(img,&column);
+
+	    BVTMagImage_GetOriginRow(img,&row);
 		
-		int sock_fd = socket(AF_INET, SOCK_DGRAM, 0);
+
         
         picSize = height*width;
 
@@ -179,25 +194,27 @@ int main(int argc, char * argv[])
 
             pImg = bitBuffer+MAX_PACKAGE_DATA_NUM*pkgCnt;
             pPkg = &pkgData[PACKAGE_HEAD_LENGTH];
-            //memcpy(pPkg,pImg,toSendDataNum);
+            memcpy(&pkgData[11],&resolution,8);
+
             for(j=0;j<toSendDataNum;j++)
 
                 pPkg[j] = pImg[j];
 
-            setPkgHead(pings, pkgCnt, width,height);
-
-            //cout<<"pkgCnt"<<(int)pkgHead.pkgIndex<<"send:" << pkgHead.size<<endl;
+            setPkgHead(i, pkgCnt, width,height, column, row);
 
 
-			cnt = UDPWrite(sock_fd,(const void*)&pkgData,toSendDataNum+PACKAGE_HEAD_LENGTH);
+			cnt = UDPWrite(sock_fd,(const void*)&pkgData,toSendDataNum+PACKAGE_HEAD_LENGTH,DEST_PORT);
 		
 
             //为数据包发送预留时间，减少快速发送大量数据造成网络拥堵
             //可以逐步增大时间到不出现或很少 error frame 为止
-            if(sendCnt%5 == 4)
-                usleep(2000);
+            
+            usleep(2000);
+
+        
 
 
+		    
             if (cnt < 0){
                 printf("ERROR writing to udp socket:");
                 return 1;
@@ -205,7 +222,7 @@ int main(int argc, char * argv[])
         }
 		
 
-		close(sock_fd);
+		
 		
 		BVTHead_PutPing(out_head, ping);
 		oldpings = pings;
@@ -216,7 +233,7 @@ int main(int argc, char * argv[])
 		BVTMagImage_Destroy(img);
 	}
 
-
+    close(sock_fd);
 	BVTSonar_Destroy(file);
 	BVTSonar_Destroy(son);
 	return 0;

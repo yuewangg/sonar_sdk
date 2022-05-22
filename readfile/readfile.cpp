@@ -7,18 +7,17 @@
 #include<iostream>
 
 #define PKG_MAX_LENGTH 65500
-#define PACKAGE_HEAD_LENGTH 7 //包头长度
-#define MAX_PACKAGE_SIZE (1460*2)//最大数据包长度
+#define PACKAGE_HEAD_LENGTH 19 //包头长度
 #define MAX_PACKAGE_DATA_NUM (PKG_MAX_LENGTH-PACKAGE_HEAD_LENGTH) //除去包头最大数据量
 #define ENABLE_SONAR 1
-#define DEST_PORT "8000"   //端口号
+#define DEST_PORT 8000   //端口号
 #define DSET_IP_ADDRESS "127.0.0.1 " // server文件所在PC的IP
 
 using namespace std;
 
 unsigned char pkgData[PKG_MAX_LENGTH];
 
-int UDPWrite(int sock_fd,const void *send_buf,int bufLen)
+int UDPWrite(int sock_fd,const void *send_buf,int bufLen,unsigned short port)
 {
     if(sock_fd < 0)
     {
@@ -32,7 +31,7 @@ int UDPWrite(int sock_fd,const void *send_buf,int bufLen)
   memset(&addr_serv, 0, sizeof(addr_serv));
   addr_serv.sin_family = AF_INET;
   addr_serv.sin_addr.s_addr = inet_addr(DSET_IP_ADDRESS);
-  addr_serv.sin_port = htons((unsigned short)atoi(DEST_PORT));
+  addr_serv.sin_port = htons(port);
   len = sizeof(addr_serv);
 
   int send_num;
@@ -55,7 +54,8 @@ int UDPWrite(int sock_fd,const void *send_buf,int bufLen)
   }
 }
 
-void setPkgHead(unsigned int picIndex,unsigned int pkgIndex, unsigned int width, unsigned int height){
+
+void setPkgHead(unsigned int picIndex,unsigned int pkgIndex, unsigned int width, unsigned int height, unsigned int OriginCol, unsigned int OriginRow){
     pkgData[0] = picIndex&0xff;
     picIndex >>= 8;
 
@@ -70,10 +70,19 @@ void setPkgHead(unsigned int picIndex,unsigned int pkgIndex, unsigned int width,
     pkgData[5] = height&0xff;
     height >>= 8;
     pkgData[6] = height&0xff;
+
+    pkgData[7] = OriginCol&0xff;
+    OriginCol >>= 8;
+    pkgData[8] = OriginCol&0xff;
+
+    pkgData[9] = OriginRow&0xff;
+    OriginRow >>= 8;
+    pkgData[10] = OriginRow&0xff;
 }
-char DataFile[] = "../../data/0330Data.son";
+char DataFile[] = "/home/yue/workspace/UBM2022/bvtsdk/data/0330Data.son";
 int main(int argc, char * argv[])
 {
+    
 	int ret;
 	// Create a new BVTSonar Object
 	BVTSonar son = BVTSonar_Create();
@@ -94,7 +103,7 @@ int main(int argc, char * argv[])
 		return 1;
 	}
     BVTSonar file = BVTSonar_Create();
-	BVTSonar_CreateFile(file, "son/out.son", son, "");
+	BVTSonar_CreateFile(file, "out.son", son, "");
 	BVTHead out_head = NULL;
 	BVTSonar_GetHead(file, 0, &out_head);
 	// Make sure we have the right number of heads
@@ -128,51 +137,44 @@ int main(int argc, char * argv[])
     BVTImageGenerator ig = BVTImageGenerator_Create();
     BVTImageGenerator_SetHead(ig, head);
 
-	int height, width, picSize;
-
-    int key,pkgCnt,cnt,sendNum,toSendDataNum,test;
-    int i,k,sum,sendCnt = 0;;
+	int height, width, picSize,j, row, column;
+    int pkgCnt,cnt,sendNum,toSendDataNum;
     //struct ImgDataStr imgData;
     unsigned char *pPkg;
     unsigned short *pImg;
-	unsigned long ping_time;
 
     unsigned short* bitBuffer;
     unsigned short pixel;
-    double range;
+    double resolution;
     int sock_fd = socket(AF_INET, SOCK_DGRAM, 0);
-    int j;
 
-	for (int i = 1; i < 10; i++)
+
+	for (int i = 1; i < pings; i++)
 	{
-        //unsigned short* bitBuffer;
 		BVTPing ping = NULL;
 		BVTMagImage img;
+    
+        //unsigned short* bitBuffer;
+
 		ret = BVTHead_GetPing(head, i, &ping);
 		
 		BVTImageGenerator_GetImageXY(ig, ping, &img);
 		
 		BVTMagImage_GetHeight(img, &height );
+
 		BVTMagImage_GetWidth(img, &width) ; 
 
         BVTMagImage_GetBits(img, &bitBuffer);
-		
+
+	    BVTMagImage_GetRangeResolution(img,&resolution);
+
+	    BVTMagImage_GetOriginCol(img,&column);
+
+	    BVTMagImage_GetOriginRow(img,&row);
+
 
         
         picSize = height*width;
-
-        //BVTMagImage_GetPixel(img,680,668,&pixel);
-        //cout<<"pixel"<<pixel<<endl;
-        //BVTMagImage_GetPixel(img,680,669,&pixel);
-        //cout<<"pixel"<<pixel<<endl;
-        //BVTMagImage_GetPixel(img,679,668,&pixel);
-        //cout<<"pixel"<<pixel<<endl;
-        //BVTMagImage_GetPixel(img,679,669,&pixel);
-        //cout<<"pixel"<<pixel<<endl;
-        //BVTMagImage_GetPixelRange(img,301,668,&range);
-        //cout<<"range"<<range<<endl;
-        //BVTMagImage_GetPixelRange(img,300,568,&range);
-        //cout<<"range"<<range<<endl;
 
 		for(pkgCnt=0,sendNum=0;sendNum<picSize;pkgCnt++,sendNum += MAX_PACKAGE_DATA_NUM){
             if(sendNum + MAX_PACKAGE_DATA_NUM < picSize){
@@ -182,18 +184,16 @@ int main(int argc, char * argv[])
 
             pImg = bitBuffer+MAX_PACKAGE_DATA_NUM*pkgCnt;
             pPkg = &pkgData[PACKAGE_HEAD_LENGTH];
-            //memcpy(pPkg,pImg,toSendDataNum);
+            memcpy(&pkgData[11],&resolution,8);
 
             for(j=0;j<toSendDataNum;j++)
 
                 pPkg[j] = pImg[j];
 
-            setPkgHead(i, pkgCnt, width,height);
-
-            //cout<<"pkgCnt"<<(int)pkgCnt<<"send:" << picSize<<endl;
+            setPkgHead(i, pkgCnt, width,height, column, row);
 
 
-			cnt = UDPWrite(sock_fd,(const void*)&pkgData,toSendDataNum+PACKAGE_HEAD_LENGTH);
+			cnt = UDPWrite(sock_fd,(const void*)&pkgData,toSendDataNum+PACKAGE_HEAD_LENGTH,DEST_PORT);
 		
 
             //为数据包发送预留时间，减少快速发送大量数据造成网络拥堵
@@ -210,19 +210,7 @@ int main(int argc, char * argv[])
                 return 1;
             }
         }
-        
-        if(i==8)
-        {
-            BVTHead_GetPing(out_head, 5, &ping);
-            BVTImageGenerator_GetImageXY(ig, ping, &img);
-            double range;
-            BVTMagImage_GetPixelRange(img,500,500,&range);
-            printf("%f\n",range);
-            double bearing;
-            BVTMagImage_GetPixelRelativeBearing(img,500,500,&bearing);
-            printf("%f",bearing);
 
-        }
         
         BVTHead_PutPing(out_head, ping);
 		

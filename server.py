@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-from re import M
+from re import M, S
 import socket  # 导入socket模块
 import time  # 导入time模块
- 
+import struct
+import os
 import cv2 as cv
 import numpy as np
 from scipy.fftpack import ss_diff
@@ -11,7 +12,7 @@ from scipy.fftpack import ss_diff
 # 设置服务器默认端口号
 PORT = 8000
 PKG_MAX_LENGTH = 65500
-PACKAGE_HEAD_LENGTH = 7 
+PACKAGE_HEAD_LENGTH = 19 
 # 创建一个套接字socket对象，用于进行通讯
 # socket.AF_INET 指明使用INET地址集，进行网间通讯
 # socket.SOCK_DGRAM 指明使用数据协议，即使用传输层的udp协议
@@ -38,6 +39,9 @@ while True:
         widht = receive_data[4]*256 + receive_data[3]
         height = receive_data[6]*256 + receive_data[5]
         print(widht,height)
+        OriginCol = receive_data[8]*256 + receive_data[7]
+        OriginRow = receive_data[10]*256 + receive_data[9]
+        print(OriginCol,OriginRow)
         imgsize = widht * height
         picIndex  = receive_data[1] * 256 + receive_data[0]
         pkgIndex  = receive_data[2]
@@ -45,9 +49,14 @@ while True:
         maxpkg = int(imgsize / (PKG_MAX_LENGTH - PACKAGE_HEAD_LENGTH))
         print(maxpkg)
 
+        resolution = struct.unpack('d', receive_data[11:19])[0]
+        print(resolution)   # 分辨率 double型
+
         if picIndex == old_picIndex: pass            
         else: ByteArray.clear() 
-        ByteArray+=receive_data[7:]
+        ByteArray+=receive_data[PACKAGE_HEAD_LENGTH:]
+        if not os.path.exists("./img/"):
+            os.makedirs("./img/")        
 
         if pkgIndex == maxpkg:
             flatNumpyArray = np.array(ByteArray)
