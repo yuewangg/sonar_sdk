@@ -65,6 +65,7 @@ while True:
         
 
         old_picIndex = picIndex
+        print(old_picIndex)
         
         
 

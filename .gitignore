@@ -3,3 +3,6 @@ doc/
 examples/
 bvtsdk/
 target_position_fusion/
+img/
+*.son
+*.o

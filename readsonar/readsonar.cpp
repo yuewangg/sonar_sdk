@@ -6,12 +6,12 @@
 #include <bvt_sdk.h>
 
 #define PKG_MAX_LENGTH 65500
-#define PACKAGE_HEAD_LENGTH 7 //包头长度
+#define PACKAGE_HEAD_LENGTH 19 //包头长度
 #define MAX_PACKAGE_SIZE PKG_MAX_LENGTH//最大数据包长度
 #define MAX_PACKAGE_DATA_NUM (MAX_PACKAGE_SIZE-PACKAGE_HEAD_LENGTH) //除去包头最大数据量
 #define ENABLE_SONAR 1
 #define DEST_PORT 8000   //端口号
-#define DSET_IP_ADDRESS "127.0.0.1 " // server文件所在PC的IP
+#define DSET_IP_ADDRESS "127.0.0.1" // server文件所在PC的IP
 
 using namespace std;
 
@@ -135,8 +135,8 @@ int main(int argc, char * argv[])
 		return 1;
 	}
 	
-	BVTSonar_CreateFile(file, "son/out.son", son, "");
-	BVTSonar_CreateFile(son, "son/work.son", son, "");
+	BVTSonar_CreateFile(file, "out.son", son, "");
+	// BVTSonar_CreateFile(son, "work.son", son, "");
 
 
 	// Request the first head
@@ -161,19 +161,19 @@ int main(int argc, char * argv[])
     unsigned short* bitBuffer;
 	int sock_fd = socket(AF_INET, SOCK_DGRAM, 0);
 
-	while(ENABLE_SONAR)
+    int num_pings = 10000;
+	for (int i=0; i < num_pings; i++)
 	{
 		BVTPing ping = NULL;
 		BVTMagImage img;
 		ret = BVTHead_GetPing(head, -1, &ping);
-		
-		if(BVTHead_GetPingCount(head, &pings) != oldpings){
-
+		BVTHead_GetPingCount(head, &pings);
+        printf("%d",pings);
 		BVTImageGenerator_GetImageXY(ig, ping, &img);
 
 		BVTMagImage_GetHeight(img, &height );
 		BVTMagImage_GetWidth(img, &width) ; 
-
+        
         BVTMagImage_GetBits(img, &bitBuffer);
 
 	    BVTMagImage_GetRangeResolution(img,&resolution);
@@ -182,7 +182,7 @@ int main(int argc, char * argv[])
 
 	    BVTMagImage_GetOriginRow(img,&row);
 		
-
+        //printf("%d,%d",height,width);
         
         picSize = height*width;
 
@@ -219,13 +219,11 @@ int main(int argc, char * argv[])
                 printf("ERROR writing to udp socket:");
                 return 1;
             }
-        }
 		
 
 		
 		
 		BVTHead_PutPing(out_head, ping);
-		oldpings = pings;
 		}
 		
 		
