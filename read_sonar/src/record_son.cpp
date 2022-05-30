@@ -30,7 +30,7 @@ int main(int argc, char** argv){
     printf("Create BVTSDK:Head : Success\n") ;
 
     float start_range = 1 ;
-	float stop_range = 20 ;
+	float stop_range = 100 ;
 	head.SetRange(start_range, stop_range) ;
     printf("Sonar SetRange from %f to %f : Success\n", start_range, stop_range) ;
 
