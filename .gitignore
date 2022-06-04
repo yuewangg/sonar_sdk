@@ -1,8 +1,4 @@
 data/
-doc/
-examples/
-bvtsdk/
-target_position_fusion/
+new/
 img/
-*.son
-*.o
+build/

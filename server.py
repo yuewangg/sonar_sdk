@@ -12,12 +12,13 @@ from scipy.fftpack import ss_diff
 # 设置服务器默认端口号
 PORT = 8000
 PKG_MAX_LENGTH = 65500
-PACKAGE_HEAD_LENGTH = 19 
+PACKAGE_HEAD_LENGTH = 16 
 # 创建一个套接字socket对象，用于进行通讯
 # socket.AF_INET 指明使用INET地址集，进行网间通讯
 # socket.SOCK_DGRAM 指明使用数据协议，即使用传输层的udp协议
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 address = ("127.0.0.1", PORT)
+server_socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
 server_socket.bind(address)  # 为服务器绑定一个固定的地址，ip和端口
 server_socket.settimeout(1)  # 设置一个时间提示，如果10秒钟没接到数据进行提示
 ByteArray = bytearray()
@@ -36,20 +37,16 @@ while True:
         # client  表示传来数据的客户端的身份信息，客户端的ip和端口，元组
         receive_data, client = server_socket.recvfrom(PKG_MAX_LENGTH)
         # print(receive_data[5])  # 以指定格式显示时间
-        widht = receive_data[4]*256 + receive_data[3]
-        height = receive_data[6]*256 + receive_data[5]
-        print(widht,height)
-        OriginCol = receive_data[8]*256 + receive_data[7]
-        OriginRow = receive_data[10]*256 + receive_data[9]
+        OriginCol = receive_data[5]*256 + receive_data[4]
+        OriginRow = receive_data[7]*256 + receive_data[6]
         print(OriginCol,OriginRow)
-        imgsize = widht * height
         picIndex  = receive_data[1] * 256 + receive_data[0]
         pkgIndex  = receive_data[2]
         print(picIndex, pkgIndex)
-        maxpkg = int(imgsize / (PKG_MAX_LENGTH - PACKAGE_HEAD_LENGTH))
+        maxpkg = receive_data[3]
         print(maxpkg)
 
-        resolution = struct.unpack('d', receive_data[11:19])[0]
+        resolution = struct.unpack('d', receive_data[8:16])[0]
         print(resolution)   # 分辨率 double型
 
         if picIndex == old_picIndex: pass            
@@ -60,8 +57,8 @@ while True:
 
         if pkgIndex == maxpkg:
             flatNumpyArray = np.array(ByteArray)
-            grayImage = flatNumpyArray.reshape(height, widht)
-            cv.imwrite("img/"+str(picIndex)+"GrayImage.jpg", grayImage)
+            img_decode = cv.imdecode(flatNumpyArray, cv.IMREAD_COLOR)
+            cv.imwrite("img/"+str(picIndex)+"GrayImage.jpg", img_decode)
         
 
         old_picIndex = picIndex
