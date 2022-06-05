@@ -55,6 +55,17 @@ BVTSDK::ImageGenerator img;
 BVTSDK::ColorMapper mapp;
 BVTSDK::Sonar file;
 
+string strFileName("../config/config.yaml");
+
+YAML::Node config;
+try{
+    config = YAML::LoadFile(strFileName.c_str());  
+}catch(...) { 
+    std::cout << "usage:./main configFile" << std::endl;
+    return ;
+}
+
+
 unsigned int pos = config["pos"].as<unsigned int>();
 unsigned int set_gamma = config["set_gamma"].as<unsigned int>();
 unsigned int top = config["top"].as<unsigned int>();
@@ -174,26 +185,26 @@ void Sonar_status(){
 
 }
 
-std::string GetNowTime(){
-	time_t setTime;
-	time(setTime);
-	tm* ptm = localtime(&setTime);
+std::string get_now_time(){
+	time_t set_time;
+	time(&set_time);
+	tm* ptm = localtime(&set_time);
 	std::string time = std::to_string(ptm->tm_year + 1900)
 					   + "_"
-					   std::to_string(ptm->tm_mon + 1)
+					   + std::to_string(ptm->tm_mon + 1)
 					   + "_"
-					   std::to_string(ptm->tm_mday)
+					   + std::to_string(ptm->tm_mday)
 					   + "_"
-					   std::to_string(ptm->tm_hour)
+					   + std::to_string(ptm->tm_hour)
 					   + "_"
-					   std::to_string(ptm->tm_min)
+					   + std::to_string(ptm->tm_min)
 					   + "_"
-					   std::to_string(ptm->tm_sec);
+					   + std::to_string(ptm->tm_sec);
 	return time;
 
 }
 
-int send_img(){
+int send_img(int sock_fd){
 
 	/// Genarate XY ColorImage ///
 	BVTSDK::MagImage mag = img.GetImageXY(ping);			// Get XY image from ping
@@ -284,9 +295,7 @@ int main(int argc, char** argv){
     //	cout.precision(12);
 	//#endif
     //bool bEndFlag = false;
-
-    string strFileName("../config/config.yaml");
-	std::string str_time = GetNowTime();
+	std::string str_time = get_now_time();
 	std::string fileName = str_time + ".son";			// filename of .son
 	sonar_set(fileName);
 
@@ -305,7 +314,7 @@ int main(int argc, char** argv){
 	while(1){
 		ping = head.GetPing(-1);  	// Getping less than 0 is get next ping
 
-		send_img();
+		send_img(sock_fd);
 
 		get_depth();
 
