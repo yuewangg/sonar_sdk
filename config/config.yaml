@@ -36,6 +36,14 @@ local_report_port:  9997
 report_ip: 127.0.0.1
 report_port:  9996
 
+# sonar setup
+pos: 0
+set_gamma: 50
+top: 0
+bottom: 0
+start_range: 1
+stop_range: 100
+
 
 
 

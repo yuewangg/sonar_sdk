@@ -13,12 +13,14 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <ifaddrs.h>
-#include <unistd.h>
-
 #include <target_pos_fusion.h>
 #include <vector>
 #include <pthread.h>
 #include <mutex>
+#include <utm.h>
+#include <sys/socket.h>
+
+
 //#include "ros/ros.h"
 //#include "sensor_msgs/CompressedImage.h"
 //#include "image_transport/image_transport.h"
@@ -36,18 +38,10 @@
 
 using namespace std;
 
-int pos = 0;
-int set_gamma = 50 ;
-int top = 0 ;
-int bottom = 0 ;
 
-int i = 0;
-
-float start_range = 1 ;
-float stop_range = 100 ;
 
 unsigned char pkgData[PKG_MAX_LENGTH];
-
+int i = 0;
 cv::Mat color_img ;
 
 //int thres_type = CV_THRESH_BINARY ;
@@ -61,6 +55,12 @@ BVTSDK::ImageGenerator img;
 BVTSDK::ColorMapper mapp;
 BVTSDK::Sonar file;
 
+unsigned int pos = config["pos"].as<unsigned int>();
+unsigned int set_gamma = config["set_gamma"].as<unsigned int>();
+unsigned int top = config["top"].as<unsigned int>();
+unsigned int bottom = config["bottom"].as<unsigned int>();
+unsigned int start_range = config["start_range"].as<float>();
+unsigned int stop_range = config["stop_range"].as<float>();
 
 
 
