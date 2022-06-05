@@ -174,6 +174,25 @@ void Sonar_status(){
 
 }
 
+std::string GetNowTime(){
+	time_t setTime;
+	time(setTime);
+	tm* ptm = localtime(&setTime);
+	std::string time = std::to_string(ptm->tm_year + 1900)
+					   + "_"
+					   std::to_string(ptm->tm_mon + 1)
+					   + "_"
+					   std::to_string(ptm->tm_mday)
+					   + "_"
+					   std::to_string(ptm->tm_hour)
+					   + "_"
+					   std::to_string(ptm->tm_min)
+					   + "_"
+					   std::to_string(ptm->tm_sec);
+	return time;
+
+}
+
 int send_img(){
 
 	/// Genarate XY ColorImage ///
@@ -222,12 +241,11 @@ int send_img(){
 	return cnt;
 }
 
-void sonar_set(){
+void sonar_set(std::string fileName){
 	/// Setup Path ///
 	std::string rootPath = "/root/Documents/bvtsdk/";			// SDKs path
 	std::string dataPath = rootPath + "data/";					// .son path
 	std::string mapperPath = rootPath + "colormaps/jet.cmap";	// Colormapper path
-	std::string fileName = "test.son";			// filename of .son
 	std::string fullPath = dataPath + fileName;
 	
 	// Open .son file ///
@@ -268,8 +286,9 @@ int main(int argc, char** argv){
     //bool bEndFlag = false;
 
     string strFileName("../config/config.yaml");
-	
-	sonar_set();
+	std::string str_time = GetNowTime();
+	std::string fileName = str_time + ".son";			// filename of .son
+	sonar_set(fileName);
 
 	int sock_fd = createSocket(DSET_IP_ADDRESS, 8000);
 
