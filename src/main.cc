@@ -55,25 +55,6 @@ BVTSDK::ImageGenerator img;
 BVTSDK::ColorMapper mapp;
 BVTSDK::Sonar file;
 
-string strFileName("../config/config.yaml");
-
-YAML::Node config;
-try{
-    config = YAML::LoadFile(strFileName.c_str());  
-}catch(...) { 
-    std::cout << "usage:./main configFile" << std::endl;
-    return ;
-}
-
-
-unsigned int pos = config["pos"].as<unsigned int>();
-unsigned int set_gamma = config["set_gamma"].as<unsigned int>();
-unsigned int top = config["top"].as<unsigned int>();
-unsigned int bottom = config["bottom"].as<unsigned int>();
-unsigned int start_range = config["start_range"].as<float>();
-unsigned int stop_range = config["stop_range"].as<float>();
-
-
 
 			///depth match
 void get_depth(){
@@ -114,6 +95,8 @@ void get_depth(){
 }
 // cv::Mat color_img ;
 // cv::Mat auto_img ;
+
+// setpkghead
 void setPkgHead(unsigned int picIndex,unsigned int pkgIndex, unsigned int sendIndex, unsigned int OriginCol, unsigned int OriginRow){
     pkgData[0] = picIndex&0xff;
     picIndex >>= 8;
@@ -131,23 +114,6 @@ void setPkgHead(unsigned int picIndex,unsigned int pkgIndex, unsigned int sendIn
     pkgData[6] = OriginRow&0xff;
     OriginRow >>= 8;
     pkgData[7] = OriginRow&0xff;
-}
-/// Changing Gamma in ColorMapper ///
-void Set_Gamma( int , void* ){
-	float int2float = set_gamma/100.0 ;
-	mapp.SetGamma(int2float) ;
-}
-
-/// Changing Threshold in ColorMapper ///
-void SetMapperThreshold( int , void*){
-	if(top > bottom){
-		mapp.SetThresholds(top, bottom);
-	}
-}
-
-/// Changing Sound speed in ImageGenerator ///
-void SpeedChange( int , void*){
-	img.SetSoundSpeedOverride(pos);
 }
 
 /// Show Sonar information ///
@@ -184,7 +150,7 @@ void Sonar_status(){
 	}
 
 }
-
+// get now time 2 str
 std::string get_now_time(){
 	time_t set_time;
 	time(&set_time);
@@ -203,7 +169,7 @@ std::string get_now_time(){
 	return time;
 
 }
-
+// send sonar img
 int send_img(int sock_fd){
 
 	/// Genarate XY ColorImage ///
@@ -251,9 +217,19 @@ int send_img(int sock_fd){
         }
 	return cnt;
 }
-
-void sonar_set(std::string fileName){
+// sonar setup and open
+void sonar_set(string strYamlFileName){
 	/// Setup Path ///
+	YAML::Node config;
+	config = YAML::LoadFile(strYamlFileName.c_str());  
+	unsigned int pos = config["pos"].as<unsigned int>();
+	unsigned int set_gamma = config["set_gamma"].as<unsigned int>();
+	unsigned int top = config["top"].as<unsigned int>();
+	unsigned int bottom = config["bottom"].as<unsigned int>();
+	float start_range = config["start_range"].as<float>();
+	float stop_range = config["stop_range"].as<float>();
+	std::string str_time = get_now_time();
+	std::string fileName = str_time + ".son";			// filename of .son
 	std::string rootPath = "/root/Documents/bvtsdk/";			// SDKs path
 	std::string dataPath = rootPath + "data/";					// .son path
 	std::string mapperPath = rootPath + "colormaps/jet.cmap";	// Colormapper path
@@ -275,15 +251,14 @@ void sonar_set(std::string fileName){
     file.CreateFile(fileName, sonar, "") ;
 	file_head = file.GetHead(0) ;
 	/// Create Trackbar ///
+	img.SetSoundSpeedOverride(pos);
+	if(top > bottom){
+		mapp.SetThresholds(top, bottom);
+	}
 
-	/// RawImage Trackerbar ///
-	cv::createTrackbar("Sound Speed" , "RawImage" , &pos , 2000 , SpeedChange);
-	cv::createTrackbar("Top Thres" , "RawImage" , &top , 32700 , SetMapperThreshold);
-	cv::createTrackbar("Bottom Thres" , "RawImage" , &bottom , 32700 , SetMapperThreshold);
-	cv::createTrackbar("Gamma" , "RawImage" , &set_gamma , 100 , Set_Gamma);
-	/// Soundspeed Trackbar ///
-	cv::createTrackbar("Sound Speed" , "RThetaImage" , &pos , 2000 , SpeedChange);
-	cv::createTrackbar("Sound Speed" , "RawImage_Auto" , &pos , 2000 , SpeedChange);
+	float int2float = set_gamma/100.0 ;
+	mapp.SetGamma(int2float) ;
+
 	printf("SDK Ready!!!\n") ;	
 }
 
@@ -295,9 +270,8 @@ int main(int argc, char** argv){
     //	cout.precision(12);
 	//#endif
     //bool bEndFlag = false;
-	std::string str_time = get_now_time();
-	std::string fileName = str_time + ".son";			// filename of .son
-	sonar_set(fileName);
+	string strFileName("../config/config.yaml");
+	sonar_set(strFileName);
 
 	int sock_fd = createSocket(DSET_IP_ADDRESS, 8000);
 
