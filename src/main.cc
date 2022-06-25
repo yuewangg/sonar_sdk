@@ -222,7 +222,7 @@ void sonar_set(string strYamlFileName){
 	/// Setup Path ///
 	YAML::Node config;
 	config = YAML::LoadFile(strYamlFileName.c_str());  
-	unsigned int pos = config["sundspeed"].as<unsigned int>();
+	unsigned int pos = config["soundspeed"].as<unsigned int>();
 	string sonar_ip = config["sonar_ip"].as<string>();
 	float start_range = config["start_range"].as<float>();
 	float stop_range = config["stop_range"].as<float>();
