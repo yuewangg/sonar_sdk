@@ -222,10 +222,8 @@ void sonar_set(string strYamlFileName){
 	/// Setup Path ///
 	YAML::Node config;
 	config = YAML::LoadFile(strYamlFileName.c_str());  
-	unsigned int pos = config["pos"].as<unsigned int>();
-	unsigned int set_gamma = config["set_gamma"].as<unsigned int>();
-	unsigned int top = config["top"].as<unsigned int>();
-	unsigned int bottom = config["bottom"].as<unsigned int>();
+	unsigned int pos = config["sundspeed"].as<unsigned int>();
+	string sonar_ip = config["sonar_ip"].as<string>();
 	float start_range = config["start_range"].as<float>();
 	float stop_range = config["stop_range"].as<float>();
 	std::string str_time = get_now_time();
@@ -236,7 +234,7 @@ void sonar_set(string strYamlFileName){
 	std::string fullPath = dataPath + fileName;
 	
 	// Open .son file ///
-	sonar.Open("NET" , "192.168.1.45");				// 
+	sonar.Open("NET" , sonar_ip);				// 
 	printf("SDK Ready!!!\n") ;
 	head = sonar.GetHead(0);					// Connect head to sonar, 0 = single-head sonar
 	head.SetRange(start_range, stop_range) ;	// Setup range 
@@ -245,19 +243,13 @@ void sonar_set(string strYamlFileName){
 	img.SetHead(head);							// Create ImageGenerator
 	
 	mapp.Load(mapperPath);						// Load Colormapper
-	mapp.SetAutoMode(0);							// Disable Auto Parameter, 0 = disable
+	mapp.SetAutoMode(1);							// Disable Auto Parameter, 0 = disable
 	
 	//.son file	
     file.CreateFile(fileName, sonar, "") ;
 	file_head = file.GetHead(0) ;
 	/// Create Trackbar ///
 	img.SetSoundSpeedOverride(pos);
-	if(top > bottom){
-		mapp.SetThresholds(top, bottom);
-	}
-
-	float int2float = set_gamma/100.0 ;
-	mapp.SetGamma(int2float) ;
 
 	printf("SDK Ready!!!\n") ;	
 }

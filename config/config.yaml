@@ -37,10 +37,8 @@ report_ip: 127.0.0.1
 report_port:  9996
 
 # sonar setup
-pos: 0
-set_gamma: 50
-top: 0
-bottom: 0
+soundspeed: 1500
+sonar_ip: "192.168.1.45"
 start_range: 1
 stop_range: 100
 
