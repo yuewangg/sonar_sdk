@@ -4,7 +4,20 @@
 #include <opencv2/opencv.hpp>
 #include <string>
 #include <udp.h>
-#include <unistd.h>
+#include <stdio.h>
+#include <cmath>
+#include <cstring>
+#include <fstream>
+#include <unistd.h> //read & write g++
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <ifaddrs.h>
+#include <vector>
+#include <pthread.h>
+#include <mutex>
+#include <yaml-cpp/yaml.h>
+#include <sys/socket.h>
 
 #include "opencv2/imgproc/imgproc.hpp"
 
@@ -25,8 +38,6 @@ int set_gamma = 50 ;
 int top = 0 ;
 int bottom = 0 ;
 
-float start_range = 1 ;
-float stop_range = 20 ;
 
 double maxval = 255 ;
 
@@ -112,30 +123,59 @@ void setPkgHead(unsigned int picIndex,unsigned int pkgIndex, unsigned int sendIn
     pkgData[7] = OriginRow&0xff;
 }
 
-int main(int argc, char** argv){
+std::string get_now_time(){
+	time_t set_time;
+	time(&set_time);
+	tm* ptm = localtime(&set_time);
+	std::string time = std::to_string(ptm->tm_year + 1900)
+					   + "_"
+					   + std::to_string(ptm->tm_mon + 1)
+					   + "_"
+					   + std::to_string(ptm->tm_mday)
+					   + "_"
+					   + std::to_string(ptm->tm_hour)
+					   + "_"
+					   + std::to_string(ptm->tm_min)
+					   + "_"
+					   + std::to_string(ptm->tm_sec);
+	return time;
 
+}
+
+int main(int argc, char** argv){
+	
+	std::string strFileName("../config/config.yaml");
+	YAML::Node config;
+	config = YAML::LoadFile(strFileName.c_str());  
 	/// Setup Path ///
-	std::string rootPath = "/root/Documents/bvtsdk/";			// SDK path
+	std::string rootPath = config["SDK_path"].as<std::string>();			// SDK path
 	std::string dataPath = rootPath + "data/";					// .son path
 	std::string mapperPath = rootPath + "colormaps/jet.cmap";	// Colormapper path
 	std::string fileName = "0330Data.son";			// filename of .son
-	std::string fullPath = dataPath + fileName;
+	//std::string fullPath = dataPath + fileName;
+	std::string fullPath = config["data_full_path"].as<std::string>();
+	float start_range = config["start_range"].as<float>();
+	float stop_range = config["stop_range"].as<float>();
 
 	/// Create Windowname ///
 	cv::namedWindow("RawImage" , cv::WINDOW_NORMAL);
 	cv::namedWindow("RThetaImage", cv::WINDOW_NORMAL );
 	cv::namedWindow("RawImage_Auto", cv::WINDOW_NORMAL );
-	
+	printf("%s",fullPath.c_str());
 	// Open .son file ///
-	sonar.Open("FILE" , fullPath);				// Open .son file
+	sonar.Open("FILE" , fullPath.c_str());				// Open .son file
+	printf("SDK Ready!!!\n") ;
 	head = sonar.GetHead(0);					// Connect head to sonar, 0 = single-head sonar
 	head.SetRange(start_range, stop_range) ;	// Setup range 
+	
 	ping = head.GetPing(0);						// Connnect Ping to head with specific ping (Ping #0 or first ping)
 	img.SetHead(head);							// Create ImageGenerator
+	
 	map.Load(mapperPath);						// Load Colormapper
 	map.SetAutoMode(0);							// Disable Auto Parameter, 0 = disable
 	automap.Load(mapperPath) ;					// Load Colormapper
 	automap.SetAutoMode(1) ;					// Enable Auto Parameter, 1 = enable 
+	printf("SDK Ready!!!\n") ;
 	Sonar_status() ;
 
 	/// Create Trackbar ///
@@ -152,13 +192,14 @@ int main(int argc, char** argv){
 	cv::createTrackbar("Sound Speed" , "RThetaImage" , &pos , 2000 , SpeedChange);
 	cv::createTrackbar("Sound Speed" , "RawImage_Auto" , &pos , 2000 , SpeedChange);
 	
-	int i = 0;
 	int p = 1;
 	int k = 0;
+	int i = 0;
 
+	printf("SDK Ready!!!\n") ;
 	int sock_fd = createSocket(DSET_IP_ADDRESS, 8000);
-
-	while (1) {
+	int PingCount = head.GetPingCount();
+	while(1){
 
 		ping = head.GetPing(-1);  	// Getping less than 0 is get next ping
 
@@ -238,7 +279,7 @@ int main(int argc, char** argv){
 		cv::imshow("RawImage", color_img);
 		cv::imshow("RawImage_Auto", auto_img) ;
 		cv::imshow("RThetaImage", color_rth) ;
-        
+        	
 		/// unknown ///
 		k = cv::waitKey(30);
     	if( k == 27 )
@@ -246,7 +287,6 @@ int main(int argc, char** argv){
     	else if (k == 112){
     		p = !p;
     	}
-
 		i++;
 		usleep(800000);
 	}

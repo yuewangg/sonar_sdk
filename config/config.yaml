@@ -1,46 +1,11 @@
-# 测试用
-test_data_range: 15 # 测试数据范围
-test_data_size: 600  # 测试数据缓存大小
-test_flag: 0  # 创建数据标志， != 0时创建数据
-
-install_angle: 0.0 # 前视声呐安装夹角（与水平面的夹角），影响前视声纳探测目标位置
-#horizontal_angle: 120.0 # 前视声呐水平开角，如果得到的角度相对于第一个波束，则需要这个参数
-
-global_report_num: 5 # 上报目标个数
-distance_max: 2.0 # 距离阈值
-
-#target_buf_num: 40 # 目标列表缓存大小，经过测试，太小可能会发生错误:
-                    # 扩容的时候，可能导致第一个数据出错（程序中vpTargets_存储了指针，扩容导致vpTargets_[0]存储的地址发生改变，原因不明）
-
-# 上报搜索流程的阈值
-local_report_conf_threshold: 0.65
-local_report_num_threshold: 5 # 预留参数
-
-# 最终上报的阈值
-global_report_conf_threshold: 0.8
-global_report_num_threshold: 15 # 预留参数
-
-# 接收数据 地址端口
-client_ip: 127.0.0.1
-client_port: 9999
-
-# 上报数据 地址端口
-server_ip: 127.0.0.1
-server_port: 9999
-
-# 任务搜索 地址端口
-local_report_ip: 127.0.0.1
-local_report_port:  9997
-
-# 水面艇 地址端口，应该是水声通信？用不着
-report_ip: 127.0.0.1
-report_port:  9996
-
 # sonar setup
 soundspeed: 1500
 sonar_ip: "192.168.1.45"
 start_range: 1
-stop_range: 100
+stop_range: 20
+data_full_path: "/root/Documents/bvtsdk/data/20m.son"
+SDK_path: "/root/Documents/bvtsdk/"
+record_enable: 0
 
 
 

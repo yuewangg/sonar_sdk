@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10.0)
-project(main)
+project(sonar_sdk)
 
 # Determine if the BLUEVIEW_SDK_ROOT has been set
 message("==================================")
@@ -28,18 +28,16 @@ endif(DEBUG)
 include_directories(${EIGEN3_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS} "include" )
 link_directories(${CMAKE_SOURCE_DIR}/lib /root/Documents/bvtsdk/lib)
 
-add_executable(writeSide src/writeSide.cc src/udp.cc)
-add_executable(writeForward src/writeForward.cc src/udp.cc)
-add_executable(read src/read.cc src/udp.cc)
-add_executable(read2 src/read2.cc src/udp.cc)
-
-add_executable(main                 
-                src/main.cc
-                src/udp.cc
-                src/utm.cc
-                src/frame.cc
-                src/target.cc      
-                src/target_pos_fusion.cc                          
+add_executable(sonar_connect                 
+                src/sonar_connect.cc
+                src/udp.cc                      
 )
 
-target_link_libraries(main  yaml-cpp bvtsdk ${OpenCV_LIBS})
+add_executable(sonar_read                 
+                src/sonar_read.cc
+                src/udp.cc                      
+)
+
+target_link_libraries(sonar_read  yaml-cpp bvtsdk ${OpenCV_LIBS})
+
+target_link_libraries(sonar_connect  yaml-cpp bvtsdk ${OpenCV_LIBS})
